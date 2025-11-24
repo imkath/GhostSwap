@@ -1,0 +1,32 @@
+import { z } from 'zod'
+
+// Group schemas
+export const updateGroupSchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es muy largo').optional(),
+  budget: z.number().positive('El presupuesto debe ser positivo').nullable().optional(),
+  currency: z.string().min(1).max(10).optional(),
+  exchange_date: z.string().datetime().nullable().optional(),
+})
+
+export const groupIdSchema = z.string().uuid('ID de grupo inválido')
+
+export const memberIdSchema = z.string().uuid('ID de miembro inválido')
+
+// Draw schemas
+export const drawNamesSchema = z.object({
+  groupId: z.string().uuid('ID de grupo inválido'),
+})
+
+// Wishlist schemas
+export const wishlistItemSchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido').max(200, 'El nombre es muy largo'),
+  url: z.string().url('URL inválida').optional().or(z.literal('')),
+  description: z.string().max(500, 'La descripción es muy larga').optional(),
+  priority: z.number().min(1).max(5).optional(),
+})
+
+export const updateWishlistSchema = z.array(wishlistItemSchema).max(5, 'Máximo 5 items permitidos')
+
+// Type exports
+export type UpdateGroupInput = z.infer<typeof updateGroupSchema>
+export type WishlistItem = z.infer<typeof wishlistItemSchema>
