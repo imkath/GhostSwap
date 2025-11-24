@@ -56,6 +56,21 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
     return `${symbol}${formattedAmount}`
   }
 
+  const getCurrencyFlag = (currencyCode: string) => {
+    const currencyFlags: Record<string, string> = {
+      'CLP': '🇨🇱',
+      'USD': '🇺🇸',
+      'EUR': '🇪🇺',
+      'MXN': '🇲🇽',
+      'ARS': '🇦🇷',
+      'COP': '🇨🇴',
+      'PEN': '🇵🇪',
+      'BRL': '🇧🇷',
+      'GBP': '🇬🇧'
+    }
+    return currencyFlags[currencyCode] || '💰'
+  }
+
   return (
     <Card className="border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50">
       <CardContent className="pt-6">
@@ -67,7 +82,10 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
                 <Wallet className="w-5 h-5" />
               </div>
               <p className="text-2xl font-bold text-slate-900">{formatCurrency(budget, currency)}</p>
-              <p className="text-xs text-slate-500 mt-1">Presupuesto</p>
+              <p className="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1">
+                <span>{getCurrencyFlag(currency)}</span>
+                <span>Presupuesto</span>
+              </p>
             </div>
           )}
 

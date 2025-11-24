@@ -50,6 +50,7 @@ import confetti from "canvas-confetti"
 import { WishlistEditor } from "@/components/wishlist-editor"
 import { GroupPageSkeleton } from "@/components/skeletons"
 import { GroupInfoCard } from "@/components/group-info-card"
+import { ExclusionsManager } from "@/components/exclusions-manager"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 
@@ -186,7 +187,7 @@ export default function GroupPage() {
           user_id: m.user_id,
           wishlist: m.wishlist || [],
           is_admin: m.is_admin,
-          profile: m.profiles
+          profile: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
         }))
         setMembers(formattedMembers)
 
@@ -514,6 +515,16 @@ export default function GroupPage() {
                   </>
                 )}
               </Button>
+
+              {/* Exclusions Manager - Admin only */}
+              {isAdmin && (
+                <ExclusionsManager
+                  groupId={groupId}
+                  members={members}
+                  isAdmin={isAdmin}
+                  isDrawn={group.status === "DRAWN"}
+                />
+              )}
 
               {/* Draw Button - Only for admin in PLANNING */}
               {isAdmin && group.status === "PLANNING" && members.length >= 3 && (
