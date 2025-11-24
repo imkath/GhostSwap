@@ -10,22 +10,22 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase"
 
 const currencies = [
-  { code: 'USD', symbol: '$', name: 'Dólar estadounidense' },
-  { code: 'EUR', symbol: '€', name: 'Euro' },
-  { code: 'MXN', symbol: '$', name: 'Peso mexicano' },
-  { code: 'ARS', symbol: '$', name: 'Peso argentino' },
-  { code: 'CLP', symbol: '$', name: 'Peso chileno' },
-  { code: 'COP', symbol: '$', name: 'Peso colombiano' },
-  { code: 'PEN', symbol: 'S/', name: 'Sol peruano' },
-  { code: 'BRL', symbol: 'R$', name: 'Real brasileño' },
-  { code: 'GBP', symbol: '£', name: 'Libra esterlina' },
+  { code: 'CLP', symbol: '$', name: 'Peso chileno', defaultBudget: '15000' },
+  { code: 'USD', symbol: '$', name: 'Dólar estadounidense', defaultBudget: '15' },
+  { code: 'EUR', symbol: '€', name: 'Euro', defaultBudget: '15' },
+  { code: 'MXN', symbol: '$', name: 'Peso mexicano', defaultBudget: '300' },
+  { code: 'ARS', symbol: '$', name: 'Peso argentino', defaultBudget: '15000' },
+  { code: 'COP', symbol: '$', name: 'Peso colombiano', defaultBudget: '60000' },
+  { code: 'PEN', symbol: 'S/', name: 'Sol peruano', defaultBudget: '60' },
+  { code: 'BRL', symbol: 'R$', name: 'Real brasileño', defaultBudget: '80' },
+  { code: 'GBP', symbol: '£', name: 'Libra esterlina', defaultBudget: '12' },
 ]
 
 export default function NewGroupPage() {
   const router = useRouter()
   const [name, setName] = useState("")
   const [budget, setBudget] = useState("")
-  const [currency, setCurrency] = useState("USD")
+  const [currency, setCurrency] = useState("CLP")
   const [eventDate, setEventDate] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -180,7 +180,7 @@ export default function NewGroupPage() {
                 </select>
                 <Input
                   type="number"
-                  placeholder={`Ej: 25`}
+                  placeholder={`Ej: ${selectedCurrency?.defaultBudget || '15000'}`}
                   className="h-11 flex-1"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}

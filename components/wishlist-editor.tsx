@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LinkIcon, Save, Loader2, Check, ExternalLink, Trash2 } from "lucide-react"
-import type { WishlistItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { createClient } from "@/lib/supabase"
 
 interface WishlistEditorProps {
   groupId: string
-  initialItems?: WishlistItem[]
+  memberId: string
+  initialItems?: Array<{ description: string; url?: string }>
   onSave?: () => void
 }
 
@@ -20,7 +21,7 @@ interface LocalWishlistItem {
   url: string
 }
 
-export function WishlistEditor({ groupId, initialItems = [], onSave }: WishlistEditorProps) {
+export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }: WishlistEditorProps) {
   const [items, setItems] = useState<LocalWishlistItem[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
@@ -30,7 +31,7 @@ export function WishlistEditor({ groupId, initialItems = [], onSave }: WishlistE
   useEffect(() => {
     if (initialItems.length > 0) {
       const mappedItems = initialItems.map((item, index) => ({
-        id: item.id || `item-${index}`,
+        id: `item-${index}`,
         description: item.description || "",
         url: item.url || ""
       }))
@@ -77,22 +78,22 @@ export function WishlistEditor({ groupId, initialItems = [], onSave }: WishlistE
     }
 
     try {
-      const res = await fetch(`/api/groups/${groupId}/wishlist`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items
-            .filter(item => item.description.trim())
-            .map(item => ({
-              description: item.description.trim(),
-              url: item.url.trim() || null
-            }))
-        }),
-      })
+      const supabase = createClient()
 
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || "Error al guardar la lista")
+      const wishlistData = items
+        .filter(item => item.description.trim())
+        .map(item => ({
+          description: item.description.trim(),
+          url: item.url.trim() || undefined
+        }))
+
+      const { error: updateError } = await supabase
+        .from('members')
+        .update({ wishlist: wishlistData })
+        .eq('id', memberId)
+
+      if (updateError) {
+        setError(updateError.message)
         return
       }
 
@@ -125,12 +126,12 @@ export function WishlistEditor({ groupId, initialItems = [], onSave }: WishlistE
         <div className="space-y-1">
           <h3 className="text-lg font-semibold text-slate-900">Mi Lista de Deseos</h3>
           <p className="text-sm text-slate-500">
-            Agrega hasta 5 artículos para ayudar a tu Amigo Secreto. ¡Sé específico!
+            Agrega hasta 5 artículos para ayudar a tu Amigo Secreto
           </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-400">
-            {filledItemsCount}/5 artículos
+            {filledItemsCount}/5
           </span>
           {lastSaved && (
             <span className="text-xs text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-full">
@@ -236,7 +237,7 @@ export function WishlistEditor({ groupId, initialItems = [], onSave }: WishlistE
           ) : (
             <>
               <Save className="w-4 h-4 mr-2" />
-              Guardar Cambios
+              Guardar Lista
             </>
           )}
         </Button>
