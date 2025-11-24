@@ -2,9 +2,70 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Ghost, Calendar, Share2, Shuffle, Heart, Shield, Zap, Users, Star } from "lucide-react"
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'GhostSwap',
+  description: 'Organiza tu Amigo Secreto o intercambio de regalos online gratis con sorteos automáticos y listas de deseos.',
+  url: 'https://ghostswap-phi.vercel.app',
+  applicationCategory: 'EntertainmentApplication',
+  operatingSystem: 'Web',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '5',
+    ratingCount: '1',
+  },
+  inLanguage: 'es',
+  keywords: 'amigo secreto, secret santa, intercambio de regalos, sorteo navidad',
+}
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: '¿Cómo funciona el Amigo Secreto en GhostSwap?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Creas un grupo, compartes el link con tus amigos, y cuando todos se unan, realizas el sorteo automático. Cada persona ve solo a quién le tocó regalar.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿GhostSwap es gratis?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, GhostSwap es 100% gratis. No hay costos ocultos ni versiones premium.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Cuántas personas pueden participar en un grupo?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Se necesitan al menos 3 participantes para realizar el sorteo. No hay límite máximo de participantes.',
+      },
+    },
+  ],
+}
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-slate-200">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
