@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, Ghost } from "lucide-react"
+import { LogOut } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase"
+import { Logo } from "@/components/logo"
 
 interface User {
   id: string
@@ -56,12 +57,8 @@ export function AppHeader() {
   return (
     <header className="border-b border-border bg-white/80 backdrop-blur-sm sticky top-0 z-10">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 font-bold text-xl text-indigo-600 hover:opacity-80 transition-opacity"
-        >
-          <Ghost className="w-6 h-6" />
-          <span>GhostSwap</span>
+        <Link href="/dashboard">
+          <Logo linkToHome={false} />
         </Link>
 
         <div className="flex items-center gap-4">
