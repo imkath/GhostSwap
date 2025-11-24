@@ -9,10 +9,23 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
 
+const currencies = [
+  { code: 'USD', symbol: '$', name: 'Dólar estadounidense' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'MXN', symbol: '$', name: 'Peso mexicano' },
+  { code: 'ARS', symbol: '$', name: 'Peso argentino' },
+  { code: 'CLP', symbol: '$', name: 'Peso chileno' },
+  { code: 'COP', symbol: '$', name: 'Peso colombiano' },
+  { code: 'PEN', symbol: 'S/', name: 'Sol peruano' },
+  { code: 'BRL', symbol: 'R$', name: 'Real brasileño' },
+  { code: 'GBP', symbol: '£', name: 'Libra esterlina' },
+]
+
 export default function NewGroupPage() {
   const router = useRouter()
   const [name, setName] = useState("")
   const [budget, setBudget] = useState("")
+  const [currency, setCurrency] = useState("USD")
   const [eventDate, setEventDate] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -53,6 +66,7 @@ export default function NewGroupPage() {
           name,
           admin_id: user.id,
           budget: budget ? parseFloat(budget) : null,
+          currency,
           exchange_date: eventDate || null,
         })
         .select()
@@ -104,6 +118,8 @@ export default function NewGroupPage() {
     )
   }
 
+  const selectedCurrency = currencies.find(c => c.code === currency)
+
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
@@ -145,34 +161,48 @@ export default function NewGroupPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 flex items-center">
-                  <DollarSign className="w-4 h-4 mr-1" />
-                  Presupuesto (USD)
-                </label>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 flex items-center">
+                <DollarSign className="w-4 h-4 mr-1" />
+                Presupuesto
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="h-11 px-3 rounded-md border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  {currencies.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} ({c.symbol})
+                    </option>
+                  ))}
+                </select>
                 <Input
                   type="number"
-                  placeholder="Ej: 25"
-                  className="h-11"
+                  placeholder={`Ej: 25`}
+                  className="h-11 flex-1"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
                 />
               </div>
+              {selectedCurrency && (
+                <p className="text-xs text-slate-500">{selectedCurrency.name}</p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 flex items-center">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  Fecha del evento
-                </label>
-                <Input
-                  type="date"
-                  className="h-11"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 flex items-center">
+                <Calendar className="w-4 h-4 mr-1" />
+                Fecha del evento
+              </label>
+              <Input
+                type="date"
+                className="h-11"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
             </div>
 
             <div className="pt-4">
