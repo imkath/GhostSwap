@@ -57,7 +57,7 @@ export default function LoginPage() {
         </Link>
       </div>
 
-      <div className="w-full max-w-[400px] bg-white p-8 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100">
+      <div className="w-full max-w-[400px] bg-white p-8 rounded-2xl shadow-[0_20px_50px_rgba(99,102,241,0.15)] border border-slate-100">
         <div className="text-center mb-8 space-y-2">
           <div className="inline-flex p-3 rounded-full bg-indigo-50 text-indigo-600 mb-2">
             <Gift className="w-8 h-8" />

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AppHeader } from "@/components/app-header"
 import { ArrowLeft, Loader2, Ghost, Calendar, DollarSign } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
+import { getUserFriendlyError } from "@/lib/errors"
 
 const currencies = [
   { code: 'CLP', symbol: '$', name: 'Peso chileno', defaultBudget: '15000' },
@@ -23,6 +24,7 @@ const currencies = [
 
 export default function NewGroupPage() {
   const router = useRouter()
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState("")
   const [budget, setBudget] = useState("")
   const [currency, setCurrency] = useState("CLP")
@@ -40,6 +42,8 @@ export default function NewGroupPage() {
         return
       }
       setIsCheckingAuth(false)
+      // Auto-focus name input after auth check
+      setTimeout(() => nameInputRef.current?.focus(), 100)
     }
     checkAuth()
   }, [router])
@@ -73,7 +77,7 @@ export default function NewGroupPage() {
         .single()
 
       if (groupError) {
-        setError(groupError.message)
+        setError(getUserFriendlyError(groupError))
         setIsLoading(false)
         return
       }
@@ -88,7 +92,7 @@ export default function NewGroupPage() {
         })
 
       if (memberError) {
-        setError(memberError.message)
+        setError(getUserFriendlyError(memberError))
         setIsLoading(false)
         return
       }
@@ -104,8 +108,8 @@ export default function NewGroupPage() {
         })
 
       router.push(`/groups/${group.id}`)
-    } catch {
-      setError("Error de conexión")
+    } catch (err) {
+      setError(getUserFriendlyError(err as { code?: string; message?: string }))
       setIsLoading(false)
     }
   }
@@ -132,7 +136,7 @@ export default function NewGroupPage() {
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-100">
+        <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(99,102,241,0.15)] p-8 border border-slate-100">
           <div className="text-center mb-8">
             <div className="inline-flex p-3 rounded-full bg-indigo-50 text-indigo-600 mb-4">
               <Ghost className="w-8 h-8" />
@@ -153,6 +157,7 @@ export default function NewGroupPage() {
                 Nombre del grupo *
               </label>
               <Input
+                ref={nameInputRef}
                 placeholder="Ej: Navidad Familia 2024"
                 className="h-11"
                 value={name}
@@ -166,11 +171,11 @@ export default function NewGroupPage() {
                 <DollarSign className="w-4 h-4 mr-1" />
                 Presupuesto
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="h-11 px-3 rounded-md border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="h-11 px-3 rounded-md border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full sm:w-auto"
                 >
                   {currencies.map((c) => (
                     <option key={c.code} value={c.code}>
@@ -209,10 +214,13 @@ export default function NewGroupPage() {
               <Button
                 type="submit"
                 className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200/50"
-                disabled={isLoading}
+                disabled={isLoading || !name.trim()}
               >
                 {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Creando...
+                  </>
                 ) : (
                   "Crear grupo"
                 )}
