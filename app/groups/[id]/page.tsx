@@ -29,6 +29,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
 import { drawNames } from "@/app/actions/draw"
+import { WishlistEditor } from "@/components/wishlist-editor"
 
 interface Member {
   id: string
@@ -70,6 +71,7 @@ export default function GroupPage() {
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentMember, setCurrentMember] = useState<Member | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -137,6 +139,12 @@ export default function GroupPage() {
           profile: m.profiles
         }))
         setMembers(formattedMembers)
+
+        // Set current member
+        const myMember = formattedMembers.find(m => m.user_id === user.id)
+        if (myMember) {
+          setCurrentMember(myMember)
+        }
       }
 
       // If group is drawn, get current user's match
@@ -470,6 +478,20 @@ export default function GroupPage() {
                       )}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Wishlist Editor */}
+            {currentMember && (
+              <Card>
+                <CardContent className="pt-6">
+                  <WishlistEditor
+                    groupId={groupId}
+                    memberId={currentMember.id}
+                    initialItems={currentMember.wishlist}
+                    onSave={fetchGroupData}
+                  />
                 </CardContent>
               </Card>
             )}
