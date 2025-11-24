@@ -11,13 +11,20 @@ export function getUserFriendlyError(error: { code?: string; message?: string } 
     'email_taken': 'Ya existe una cuenta con ese email.',
     'weak_password': 'La contraseña debe tener al menos 6 caracteres.',
     'invalid_email': 'El formato del email no es válido.',
+    'email_not_confirmed': 'Debes confirmar tu email antes de iniciar sesión.',
+    'session_expired': 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
+    'invalid_token': 'El enlace ha expirado o es inválido.',
+    'over_email_send_rate_limit': 'Demasiados intentos. Espera unos minutos antes de intentar de nuevo.',
 
     // Database errors
     '23505': 'Este registro ya existe.',
     '23503': 'No se puede completar la acción porque hay datos relacionados.',
+    '23502': 'Faltan datos requeridos.',
+    '22P02': 'El formato de los datos es incorrecto.',
     '42P17': 'Error de configuración. Por favor, contacta soporte.',
     '42501': 'No tienes permisos para realizar esta acción.',
     'PGRST116': 'No se encontró el registro solicitado.',
+    'PGRST301': 'Error de conexión con la base de datos.',
 
     // Network errors
     'FetchError': 'Error de conexión. Verifica tu internet e intenta de nuevo.',

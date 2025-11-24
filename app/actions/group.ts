@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase-server"
+import { updateGroupSchema, groupIdSchema, memberIdSchema } from "@/lib/validations"
 
 export async function updateGroup(
   groupId: string,
@@ -11,6 +12,17 @@ export async function updateGroup(
     exchange_date?: string | null
   }
 ) {
+  // Validate inputs
+  const groupIdResult = groupIdSchema.safeParse(groupId)
+  if (!groupIdResult.success) {
+    return { success: false, error: groupIdResult.error.errors[0].message }
+  }
+
+  const dataResult = updateGroupSchema.safeParse(data)
+  if (!dataResult.success) {
+    return { success: false, error: dataResult.error.errors[0].message }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -52,6 +64,12 @@ export async function updateGroup(
 }
 
 export async function deleteGroup(groupId: string) {
+  // Validate input
+  const groupIdResult = groupIdSchema.safeParse(groupId)
+  if (!groupIdResult.success) {
+    return { success: false, error: groupIdResult.error.errors[0].message }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -88,6 +106,12 @@ export async function deleteGroup(groupId: string) {
 }
 
 export async function leaveGroup(groupId: string) {
+  // Validate input
+  const groupIdResult = groupIdSchema.safeParse(groupId)
+  if (!groupIdResult.success) {
+    return { success: false, error: groupIdResult.error.errors[0].message }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -146,6 +170,17 @@ export async function leaveGroup(groupId: string) {
 }
 
 export async function removeMember(groupId: string, memberId: string) {
+  // Validate inputs
+  const groupIdResult = groupIdSchema.safeParse(groupId)
+  if (!groupIdResult.success) {
+    return { success: false, error: groupIdResult.error.errors[0].message }
+  }
+
+  const memberIdResult = memberIdSchema.safeParse(memberId)
+  if (!memberIdResult.success) {
+    return { success: false, error: memberIdResult.error.errors[0].message }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -216,6 +251,12 @@ export async function removeMember(groupId: string, memberId: string) {
 }
 
 export async function getGroupActivities(groupId: string) {
+  // Validate input
+  const groupIdResult = groupIdSchema.safeParse(groupId)
+  if (!groupIdResult.success) {
+    return { success: false, error: groupIdResult.error.errors[0].message, activities: [] }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
