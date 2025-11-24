@@ -1,10 +1,15 @@
 import { z } from 'zod'
 
+// Supported currencies
+export const currencySchema = z.enum(['CLP', 'USD', 'EUR', 'MXN', 'ARS', 'COP', 'PEN', 'BRL', 'GBP'], {
+  errorMap: () => ({ message: 'Moneda no soportada' })
+})
+
 // Group schemas
 export const updateGroupSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es muy largo').optional(),
   budget: z.number().positive('El presupuesto debe ser positivo').nullable().optional(),
-  currency: z.string().min(1).max(10).optional(),
+  currency: currencySchema.optional(),
   exchange_date: z.string().datetime().nullable().optional(),
 })
 

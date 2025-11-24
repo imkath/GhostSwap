@@ -5,10 +5,11 @@ import { Calendar, Wallet } from "lucide-react"
 
 interface GroupInfoCardProps {
   budget: number | null
+  currency?: string
   exchangeDate: string | null
 }
 
-export function GroupInfoCard({ budget, exchangeDate }: GroupInfoCardProps) {
+export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupInfoCardProps) {
   if (!budget && !exchangeDate) return null
 
   const formatDate = (dateString: string) => {
@@ -30,6 +31,31 @@ export function GroupInfoCard({ budget, exchangeDate }: GroupInfoCardProps) {
     return diffDays
   }
 
+  const formatCurrency = (amount: number, currencyCode: string) => {
+    // Map currency codes to their symbols
+    const currencySymbols: Record<string, string> = {
+      'CLP': '$',
+      'USD': 'US$',
+      'EUR': '€',
+      'MXN': 'MX$',
+      'ARS': 'AR$',
+      'COP': 'COL$',
+      'PEN': 'S/',
+      'BRL': 'R$',
+      'GBP': '£'
+    }
+
+    const symbol = currencySymbols[currencyCode] || currencyCode
+
+    // Format number with locale-specific separators
+    const formattedAmount = amount.toLocaleString('es-ES', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })
+
+    return `${symbol}${formattedAmount}`
+  }
+
   return (
     <Card className="border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50">
       <CardContent className="pt-6">
@@ -40,7 +66,7 @@ export function GroupInfoCard({ budget, exchangeDate }: GroupInfoCardProps) {
               <div className="inline-flex p-2.5 rounded-full bg-emerald-100 text-emerald-600 mb-2">
                 <Wallet className="w-5 h-5" />
               </div>
-              <p className="text-2xl font-bold text-slate-900">${budget}</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(budget, currency)}</p>
               <p className="text-xs text-slate-500 mt-1">Presupuesto</p>
             </div>
           )}
