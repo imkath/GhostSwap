@@ -152,8 +152,15 @@ ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can only view their own match" ON matches
   FOR SELECT USING (auth.uid() = giver_id);
 
-CREATE POLICY "System can insert matches" ON matches
+CREATE POLICY "Admin can insert matches" ON matches
   FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM groups WHERE groups.id = matches.group_id AND groups.admin_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admin can delete matches" ON matches
+  FOR DELETE USING (
     EXISTS (
       SELECT 1 FROM groups WHERE groups.id = matches.group_id AND groups.admin_id = auth.uid()
     )

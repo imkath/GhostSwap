@@ -35,16 +35,21 @@ import {
   Trash2,
   LogOut,
   History,
-  Pencil
+  Pencil,
+  UserMinus,
+  RotateCcw,
+  AlertTriangle
 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
-import { drawNames } from "@/app/actions/draw"
-import { updateGroup, deleteGroup, leaveGroup, getGroupActivities } from "@/app/actions/group"
+import { drawNames, resetDraw } from "@/app/actions/draw"
+import { updateGroup, deleteGroup, leaveGroup, getGroupActivities, removeMember } from "@/app/actions/group"
+import confetti from "canvas-confetti"
 import { WishlistEditor } from "@/components/wishlist-editor"
 import { GroupPageSkeleton } from "@/components/skeletons"
+import { GroupInfoCard } from "@/components/group-info-card"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 
@@ -121,6 +126,9 @@ export default function GroupPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
+  const [showResetDialog, setShowResetDialog] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
 
   useEffect(() => {
     fetchGroupData()
@@ -347,6 +355,50 @@ export default function GroupPage() {
     setIsLoadingActivities(false)
   }
 
+  const handleRemoveMember = async (memberId: string) => {
+    setRemovingMemberId(memberId)
+
+    const result = await removeMember(groupId, memberId)
+
+    if (result.success) {
+      toast.success("Miembro eliminado")
+      await fetchGroupData()
+    } else {
+      toast.error(result.error || "Error al eliminar miembro")
+    }
+
+    setRemovingMemberId(null)
+  }
+
+  const handleRevealMatch = () => {
+    setShowMatch(true)
+    // Fire confetti
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    })
+  }
+
+  const handleResetDraw = async () => {
+    if (!group) return
+    setIsResetting(true)
+
+    const result = await resetDraw(group.id)
+
+    if (result.success) {
+      toast.success("Sorteo reiniciado")
+      setShowResetDialog(false)
+      setShowMatch(false)
+      setMatch(null)
+      await fetchGroupData()
+    } else {
+      toast.error(result.error || "Error al reiniciar el sorteo")
+    }
+
+    setIsResetting(false)
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -553,7 +605,7 @@ export default function GroupPage() {
                       </p>
                       <Button
                         size="lg"
-                        onClick={() => setShowMatch(true)}
+                        onClick={handleRevealMatch}
                         className="bg-indigo-600 hover:bg-indigo-700"
                       >
                         <Eye className="w-4 h-4 mr-2" />
@@ -624,6 +676,21 @@ export default function GroupPage() {
               </Card>
             )}
 
+            {/* Reset Draw Button - Admin only when DRAWN */}
+            {isAdmin && group.status === "DRAWN" && (
+              <div className="flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowResetDialog(true)}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reiniciar Sorteo
+                </Button>
+              </div>
+            )}
+
             {/* Wishlist Editor */}
             {currentMember && (
               <Card>
@@ -641,6 +708,14 @@ export default function GroupPage() {
 
           {/* Sidebar - Participants */}
           <div className="space-y-6">
+            {/* Group Info Card */}
+            {(group.budget || group.exchange_date) && (
+              <GroupInfoCard
+                budget={group.budget}
+                exchangeDate={group.exchange_date}
+              />
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -675,15 +750,35 @@ export default function GroupPage() {
                         )}
                       </div>
 
-                      {member.wishlist.length > 0 ? (
-                        <div className="text-emerald-500 bg-emerald-50 p-1.5 rounded-full" title="Lista lista">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        </div>
-                      ) : (
-                        <div className="text-slate-400 bg-slate-100 p-1.5 rounded-full" title="Sin lista">
-                          <Clock className="w-3.5 h-3.5" />
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {member.wishlist.length > 0 ? (
+                          <div className="text-emerald-500 bg-emerald-50 p-1.5 rounded-full" title="Lista lista">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </div>
+                        ) : (
+                          <div className="text-slate-400 bg-slate-100 p-1.5 rounded-full" title="Sin lista">
+                            <Clock className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+
+                        {/* Remove button - admin only, planning state, not self */}
+                        {isAdmin && group.status === "PLANNING" && member.user_id !== currentUserId && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveMember(member.id)}
+                            disabled={removingMemberId === member.id}
+                            className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                            title="Eliminar miembro"
+                          >
+                            {removingMemberId === member.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <UserMinus className="w-3 h-3" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -743,13 +838,15 @@ export default function GroupPage() {
               <Shuffle className="w-5 h-5 text-indigo-600" />
               Confirmar sorteo
             </DialogTitle>
-            <DialogDescription className="pt-2">
-              Esta acción es <strong>irreversible</strong>. Una vez realizado el sorteo:
-              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                <li>Cada participante recibirá su Amigo Secreto</li>
-                <li>No podrás agregar más participantes</li>
-                <li>No podrás volver a sortear</li>
-              </ul>
+            <DialogDescription className="pt-2" asChild>
+              <div>
+                Esta acción es <strong>irreversible</strong>. Una vez realizado el sorteo:
+                <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                  <li>Cada participante recibirá su Amigo Secreto</li>
+                  <li>No podrás agregar más participantes</li>
+                  <li>No podrás volver a sortear</li>
+                </ul>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -901,6 +998,41 @@ export default function GroupPage() {
             >
               {isLeaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
               Abandonar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Draw Dialog */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Reiniciar Sorteo
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              <strong>Advertencia:</strong> Esto borrará las asignaciones actuales y tendrás que sortear de nuevo.
+              <br /><br />
+              Todos los participantes perderán la información de a quién les tocó regalar.
+              <br /><br />
+              ¿Estás seguro de que deseas continuar?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowResetDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleResetDraw}
+              disabled={isResetting}
+            >
+              {isResetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+              Reiniciar
             </Button>
           </DialogFooter>
         </DialogContent>
