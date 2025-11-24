@@ -22,6 +22,20 @@ export const drawNamesSchema = z.object({
   groupId: z.string().uuid('ID de grupo inválido'),
 })
 
+// Exclusion schemas
+export const addExclusionSchema = z.object({
+  groupId: z.string().uuid('ID de grupo inválido'),
+  giverId: z.string().uuid('ID de giver inválido'),
+  excludedReceiverId: z.string().uuid('ID de receiver inválido'),
+}).refine(
+  data => data.giverId !== data.excludedReceiverId,
+  { message: 'No puedes excluir a una persona de sí misma' }
+)
+
+export const removeExclusionSchema = z.object({
+  exclusionId: z.string().uuid('ID de exclusión inválido'),
+})
+
 // Wishlist schemas
 export const wishlistItemSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(200, 'El nombre es muy largo'),
@@ -35,3 +49,5 @@ export const updateWishlistSchema = z.array(wishlistItemSchema).max(5, 'Máximo 
 // Type exports
 export type UpdateGroupInput = z.infer<typeof updateGroupSchema>
 export type WishlistItem = z.infer<typeof wishlistItemSchema>
+export type AddExclusionInput = z.infer<typeof addExclusionSchema>
+export type RemoveExclusionInput = z.infer<typeof removeExclusionSchema>
