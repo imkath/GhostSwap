@@ -117,7 +117,8 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
     .insert(matches)
 
   if (matchError) {
-    return { success: false, error: 'Error al guardar los resultados del sorteo' }
+    console.error('Error inserting matches:', matchError)
+    return { success: false, error: `Error al guardar los resultados: ${matchError.message}` }
   }
 
   // Update group status
@@ -138,6 +139,48 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
       user_id: user.id,
       type: 'DRAW',
       message: `El sorteo de "${group.name}" ha sido realizado. ¡Revisa quién te tocó!`
+    })
+
+  revalidatePath(`/groups/${groupId}`)
+
+  return { success: true }
+}
+
+export async function resetDraw(groupId: string): Promise<DrawResult> {
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return { success: false, error: 'No autenticado' }
+  }
+
+  // Get group name for activity log
+  const { data: group } = await supabase
+    .from('groups')
+    .select('name')
+    .eq('id', groupId)
+    .single()
+
+  // Use secure database function to reset draw
+  // This bypasses RLS to ensure all matches are deleted
+  const { error: resetError } = await supabase
+    .rpc('reset_group_draw', { p_group_id: groupId })
+
+  if (resetError) {
+    console.error('Error resetting draw:', resetError)
+    return { success: false, error: resetError.message }
+  }
+
+  // Log activity
+  await supabase
+    .from('activities')
+    .insert({
+      group_id: groupId,
+      user_id: user.id,
+      type: 'DRAW_RESET',
+      message: `El sorteo de "${group?.name || 'grupo'}" ha sido reiniciado`
     })
 
   revalidatePath(`/groups/${groupId}`)
