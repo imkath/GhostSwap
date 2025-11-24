@@ -79,6 +79,7 @@ interface Group {
   id: string
   name: string
   budget: number | null
+  currency: string
   exchange_date: string | null
   status: "PLANNING" | "DRAWN"
   invite_code: string
@@ -122,6 +123,7 @@ export default function GroupPage() {
   // Edit form state
   const [editName, setEditName] = useState("")
   const [editBudget, setEditBudget] = useState("")
+  const [editCurrency, setEditCurrency] = useState("CLP")
   const [editDate, setEditDate] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -284,6 +286,7 @@ export default function GroupPage() {
     if (group) {
       setEditName(group.name)
       setEditBudget(group.budget?.toString() || "")
+      setEditCurrency(group.currency || "CLP")
       setEditDate(group.exchange_date || "")
       setShowEditDialog(true)
     }
@@ -296,6 +299,7 @@ export default function GroupPage() {
     const result = await updateGroup(group.id, {
       name: editName,
       budget: editBudget ? parseFloat(editBudget) : null,
+      currency: editCurrency,
       exchange_date: editDate || null
     })
 
@@ -712,6 +716,7 @@ export default function GroupPage() {
             {(group.budget || group.exchange_date) && (
               <GroupInfoCard
                 budget={group.budget}
+                currency={group.currency}
                 exchangeDate={group.exchange_date}
               />
             )}
@@ -886,13 +891,31 @@ export default function GroupPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Presupuesto</label>
-              <Input
-                type="number"
-                value={editBudget}
-                onChange={(e) => setEditBudget(e.target.value)}
-                placeholder="Presupuesto"
-              />
+              <label className="text-sm font-medium">Presupuesto y moneda</label>
+              <div className="flex gap-2">
+                <select
+                  value={editCurrency}
+                  onChange={(e) => setEditCurrency(e.target.value)}
+                  className="h-11 px-3 rounded-md border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="CLP">CLP ($)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="MXN">MXN ($)</option>
+                  <option value="ARS">ARS ($)</option>
+                  <option value="COP">COP ($)</option>
+                  <option value="PEN">PEN (S/)</option>
+                  <option value="BRL">BRL (R$)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+                <Input
+                  type="number"
+                  value={editBudget}
+                  onChange={(e) => setEditBudget(e.target.value)}
+                  placeholder="Presupuesto"
+                  className="flex-1"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Fecha del evento</label>

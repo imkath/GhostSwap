@@ -54,6 +54,7 @@ CREATE TABLE groups (
   name TEXT NOT NULL,
   admin_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   budget DECIMAL(10, 2),
+  currency VARCHAR(3) DEFAULT 'CLP',
   exchange_date DATE,
   status group_status DEFAULT 'PLANNING',
   invite_code TEXT UNIQUE DEFAULT encode(gen_random_bytes(6), 'hex'),
@@ -63,6 +64,7 @@ CREATE TABLE groups (
 
 -- Index for invite code lookups
 CREATE INDEX idx_groups_invite_code ON groups(invite_code);
+CREATE INDEX idx_groups_currency ON groups(currency);
 
 -- ============================================
 -- MEMBERS TABLE (created before groups RLS policies)
