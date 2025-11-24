@@ -3,11 +3,13 @@
 import { AppHeader } from "@/components/app-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Users, Calendar, ArrowRight, Wallet, Loader2, UserPlus, Ghost } from "lucide-react"
+import { Plus, Users, Calendar, ArrowRight, Wallet, UserPlus, Ghost } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase"
+import { DashboardSkeleton } from "@/components/skeletons"
+import { getUserFriendlyError } from "@/lib/errors"
 
 interface Group {
   id: string
@@ -94,6 +96,9 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error fetching groups:", error)
+      // Show toast with friendly error message
+      const friendlyError = getUserFriendlyError(error as { code?: string; message?: string })
+      console.error(friendlyError)
     } finally {
       setIsLoading(false)
     }
@@ -101,8 +106,11 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="min-h-screen bg-slate-50">
+        <AppHeader />
+        <main className="container mx-auto px-4 py-8">
+          <DashboardSkeleton />
+        </main>
       </div>
     )
   }
@@ -188,12 +196,37 @@ export default function DashboardPage() {
           ))}
 
           {groups.length === 0 && !isLoading && (
-            <div className="col-span-full text-center py-12">
-              <div className="inline-flex p-4 rounded-full bg-slate-100 mb-4">
-                <Ghost className="w-8 h-8 text-slate-400" />
+            <div className="col-span-full text-center py-16">
+              <div className="relative inline-flex mb-6">
+                {/* Background decorative elements */}
+                <div className="absolute inset-0 scale-150">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-indigo-100/50 blur-xl" />
+                  <div className="absolute top-0 right-0 w-8 h-8 rounded-full bg-rose-100 blur-sm" />
+                  <div className="absolute bottom-0 left-0 w-6 h-6 rounded-full bg-violet-100 blur-sm" />
+                </div>
+                {/* Main icon container */}
+                <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center rotate-3 border border-indigo-100/50 shadow-lg shadow-indigo-100/30">
+                  <Ghost className="w-12 h-12 text-indigo-500" />
+                </div>
               </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No tienes grupos aún</h3>
-              <p className="text-slate-500 mb-4">Crea tu primer grupo de Amigo Secreto o únete a uno existente</p>
+              <h3 className="text-xl font-semibold text-slate-900 mb-3">¡Bienvenido a GhostSwap!</h3>
+              <p className="text-slate-500 mb-6 max-w-md mx-auto">
+                Aún no tienes grupos. Crea tu primer Amigo Secreto y comparte el link con tus amigos, o únete a un grupo existente.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/groups/new">
+                  <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
+                    <Plus className="w-4 h-4" />
+                    Crear mi primer grupo
+                  </Button>
+                </Link>
+                <Link href="/join">
+                  <Button variant="outline" className="gap-2">
+                    <UserPlus className="w-4 h-4" />
+                    Unirme con código
+                  </Button>
+                </Link>
+              </div>
             </div>
           )}
 

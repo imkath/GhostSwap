@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   CheckCircle2,
   Clock,
   Calendar,
@@ -14,7 +22,6 @@ import {
   Users,
   AlertCircle,
   Gift,
-  Loader2,
   ArrowLeft,
   Shuffle,
   Ghost,
@@ -22,14 +29,24 @@ import {
   EyeOff,
   Share2,
   Copy,
-  Check
+  Check,
+  Loader2,
+  Settings,
+  Trash2,
+  LogOut,
+  History,
+  Pencil
 } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
 import { drawNames } from "@/app/actions/draw"
+import { updateGroup, deleteGroup, leaveGroup, getGroupActivities } from "@/app/actions/group"
 import { WishlistEditor } from "@/components/wishlist-editor"
+import { GroupPageSkeleton } from "@/components/skeletons"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
 
 interface Member {
   id: string
@@ -81,6 +98,29 @@ export default function GroupPage() {
   // Match reveal state
   const [match, setMatch] = useState<Match | null>(null)
   const [showMatch, setShowMatch] = useState(false)
+  const [showDrawConfirm, setShowDrawConfirm] = useState(false)
+
+  // Group management dialogs
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false)
+  const [showActivityDialog, setShowActivityDialog] = useState(false)
+  const [activities, setActivities] = useState<Array<{
+    id: string
+    type: string
+    message: string
+    created_at: string
+    profiles: { full_name: string | null; email: string; avatar_url: string | null }
+  }>>([])
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false)
+
+  // Edit form state
+  const [editName, setEditName] = useState("")
+  const [editBudget, setEditBudget] = useState("")
+  const [editDate, setEditDate] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isLeaving, setIsLeaving] = useState(false)
 
   useEffect(() => {
     fetchGroupData()
@@ -189,6 +229,7 @@ export default function GroupPage() {
 
   const handleDraw = async () => {
     if (!group) return
+    setShowDrawConfirm(false)
     setIsDrawing(true)
     setError("")
 
@@ -196,7 +237,9 @@ export default function GroupPage() {
 
     if (!result.success) {
       setError(result.error || "Error al realizar el sorteo")
+      toast.error("Error al realizar el sorteo")
     } else {
+      toast.success("¡Sorteo realizado con éxito!")
       // Reload data to get match
       await fetchGroupData()
     }
@@ -225,16 +268,92 @@ export default function GroupPage() {
 
     await navigator.clipboard.writeText(inviteUrl)
     setCopied(true)
+    toast.success("Link copiado al portapapeles")
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleOpenEdit = () => {
+    if (group) {
+      setEditName(group.name)
+      setEditBudget(group.budget?.toString() || "")
+      setEditDate(group.exchange_date || "")
+      setShowEditDialog(true)
+    }
+  }
+
+  const handleSaveEdit = async () => {
+    if (!group) return
+    setIsSaving(true)
+
+    const result = await updateGroup(group.id, {
+      name: editName,
+      budget: editBudget ? parseFloat(editBudget) : null,
+      exchange_date: editDate || null
+    })
+
+    if (result.success) {
+      toast.success("Grupo actualizado")
+      setShowEditDialog(false)
+      await fetchGroupData()
+    } else {
+      toast.error(result.error || "Error al actualizar")
+    }
+
+    setIsSaving(false)
+  }
+
+  const handleDelete = async () => {
+    if (!group) return
+    setIsDeleting(true)
+
+    const result = await deleteGroup(group.id)
+
+    if (result.success) {
+      toast.success("Grupo eliminado")
+      router.push("/dashboard")
+    } else {
+      toast.error(result.error || "Error al eliminar")
+      setIsDeleting(false)
+    }
+  }
+
+  const handleLeave = async () => {
+    if (!group) return
+    setIsLeaving(true)
+
+    const result = await leaveGroup(group.id)
+
+    if (result.success) {
+      toast.success("Has abandonado el grupo")
+      router.push("/dashboard")
+    } else {
+      toast.error(result.error || "Error al abandonar")
+      setIsLeaving(false)
+    }
+  }
+
+  const handleShowActivity = async () => {
+    setShowActivityDialog(true)
+    setIsLoadingActivities(true)
+
+    const result = await getGroupActivities(groupId)
+
+    if (result.success) {
+      setActivities(result.activities as typeof activities)
+    } else {
+      toast.error(result.error || "Error al cargar actividades")
+    }
+
+    setIsLoadingActivities(false)
   }
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50">
         <AppHeader />
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-        </div>
+        <main className="container mx-auto px-4 py-8 max-w-5xl">
+          <GroupPageSkeleton />
+        </main>
       </div>
     )
   }
@@ -299,7 +418,29 @@ export default function GroupPage() {
               </h1>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {/* Activity Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleShowActivity}
+                title="Ver actividad"
+              >
+                <History className="w-4 h-4" />
+              </Button>
+
+              {/* Settings/Edit Button - Admin only */}
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleOpenEdit}
+                  title="Editar grupo"
+                >
+                  <Settings className="w-4 h-4" />
+                </Button>
+              )}
+
               {/* Share/Invite Button */}
               <Button
                 variant="outline"
@@ -321,7 +462,7 @@ export default function GroupPage() {
               {/* Draw Button - Only for admin in PLANNING */}
               {isAdmin && group.status === "PLANNING" && members.length >= 3 && (
                 <Button
-                  onClick={handleDraw}
+                  onClick={() => setShowDrawConfirm(true)}
                   disabled={isDrawing}
                   className="bg-indigo-600 hover:bg-indigo-700"
                 >
@@ -420,7 +561,7 @@ export default function GroupPage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-14 w-14 border-2 border-indigo-200">
@@ -452,16 +593,17 @@ export default function GroupPage() {
                             {match.receiver_wishlist.map((item, index) => (
                               <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
                                 <Gift className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
-                                <span>
+                                <span className="flex-1">
                                   {item.description}
                                   {item.url && (
                                     <a
                                       href={item.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="ml-2 text-indigo-600 hover:underline"
+                                      className="ml-2 text-indigo-600 hover:underline text-xs"
+                                      title={item.url}
                                     >
-                                      (ver enlace)
+                                      ({new URL(item.url).hostname.replace('www.', '')}...)
                                     </a>
                                   )}
                                 </span>
@@ -508,8 +650,12 @@ export default function GroupPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {members.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between">
+                  {members.map((member, index) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between animate-in fade-in slide-in-from-left-2 duration-300"
+                      style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+                    >
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 border border-slate-200">
                           <AvatarImage src={member.profile.avatar_url || "/placeholder.svg"} />
@@ -561,6 +707,21 @@ export default function GroupPage() {
                     </>
                   )}
                 </Button>
+
+                {/* Leave button for non-admin members */}
+                {!isAdmin && group.status === "PLANNING" && (
+                  <>
+                    <Separator className="my-3" />
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowLeaveDialog(true)}
+                      className="w-full text-xs text-slate-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <LogOut className="w-3 h-3 mr-2" />
+                      Abandonar grupo
+                    </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -573,6 +734,224 @@ export default function GroupPage() {
           </div>
         </div>
       </main>
+
+      {/* Draw Confirmation Dialog */}
+      <Dialog open={showDrawConfirm} onOpenChange={setShowDrawConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shuffle className="w-5 h-5 text-indigo-600" />
+              Confirmar sorteo
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              Esta acción es <strong>irreversible</strong>. Una vez realizado el sorteo:
+              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                <li>Cada participante recibirá su Amigo Secreto</li>
+                <li>No podrás agregar más participantes</li>
+                <li>No podrás volver a sortear</li>
+              </ul>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowDrawConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDraw}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Shuffle className="w-4 h-4 mr-2" />
+              Confirmar sorteo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Group Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-indigo-600" />
+              Editar grupo
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nombre del grupo</label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Nombre del grupo"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Presupuesto</label>
+              <Input
+                type="number"
+                value={editBudget}
+                onChange={(e) => setEditBudget(e.target.value)}
+                placeholder="Presupuesto"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Fecha del evento</label>
+              <Input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setShowEditDialog(false)
+                setShowDeleteDialog(true)
+              }}
+              className="sm:mr-auto"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Eliminar grupo
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={isSaving || !editName.trim()}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Group Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Eliminar grupo
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              ¿Estás seguro de que quieres eliminar <strong>{group?.name}</strong>?
+              <br /><br />
+              Esta acción es <strong>permanente</strong> y eliminará:
+              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                <li>Todos los miembros del grupo</li>
+                <li>El historial de actividades</li>
+                <li>Los resultados del sorteo (si aplica)</li>
+              </ul>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Leave Group Dialog */}
+      <Dialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LogOut className="w-5 h-5 text-amber-600" />
+              Abandonar grupo
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              ¿Estás seguro de que quieres abandonar <strong>{group?.name}</strong>?
+              <br /><br />
+              Perderás acceso al grupo y no podrás ver tu Amigo Secreto asignado.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowLeaveDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleLeave}
+              disabled={isLeaving}
+            >
+              {isLeaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
+              Abandonar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Activity Dialog */}
+      <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
+        <DialogContent className="max-w-md max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5 text-indigo-600" />
+              Actividad del grupo
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[50vh] -mx-6 px-6">
+            {isLoadingActivities ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+              </div>
+            ) : activities.length === 0 ? (
+              <p className="text-center text-slate-500 py-8">No hay actividades registradas</p>
+            ) : (
+              <div className="space-y-3">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="flex gap-3 text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={activity.profiles?.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">
+                          {activity.profiles?.full_name?.charAt(0) || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-slate-700">{activity.message}</p>
+                      <p className="text-xs text-slate-400">
+                        {new Date(activity.created_at).toLocaleDateString("es-ES", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LandingHeader } from "@/components/landing-header"
 import { Footer } from "@/components/footer"
+import { AuroraBackground } from "@/components/aurora-background"
 import { Ghost, Calendar, Share2, Shuffle, Heart, Shield, Zap, Users, Star } from "lucide-react"
 
 const jsonLd = {
@@ -72,50 +73,58 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-16 md:py-24 px-4 text-center space-y-6 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-sm font-medium border border-indigo-100">
-            <Star className="w-3.5 h-3.5" />
-            Sorteos invisibles, regalos inolvidables
-          </div>
+        <section className="relative py-16 md:py-24 px-4">
+          {/* Aurora Background - full width */}
+          <AuroraBackground />
+          {/* Content overlay for readability */}
+          <div className="absolute inset-0 bg-slate-50/70 pointer-events-none" />
 
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
-            Organiza el <span className="text-indigo-600">Amigo Secreto</span> más genial con GhostSwap
-          </h1>
-
-          <p className="text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
-            Crea tu grupo de intercambio de regalos, comparte el link con tus amigos y deja que la magia del sorteo haga el resto.
-            ¡Así de simple!
-          </p>
-
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/login" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full h-12 text-base bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200/50"
-              >
-                Crear mi grupo
-              </Button>
-            </Link>
-            <Link href="/join" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full h-12 text-base bg-white border-slate-300 hover:bg-slate-50 text-slate-700"
-              >
-                Unirme a un grupo
-              </Button>
-            </Link>
-          </div>
-
-          {/* Social proof */}
-          <div className="pt-6 flex items-center justify-center gap-6 text-sm text-slate-500">
-            <div className="flex items-center gap-1.5">
-              <Users className="w-4 h-4" />
-              <span>Grupos creados</span>
+          {/* Content with z-index to stay above background */}
+          <div className="relative z-10 space-y-6 text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-sm font-medium border border-indigo-100">
+              <Star className="w-3.5 h-3.5" />
+              Sorteos invisibles, regalos inolvidables
             </div>
-            <div className="flex items-center gap-1.5">
-              <Ghost className="w-4 h-4" />
-              <span>100% Gratis</span>
+
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
+              Organiza el <span className="text-indigo-600">Amigo Secreto</span> más genial con GhostSwap
+            </h1>
+
+            <p className="text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
+              Crea tu grupo de intercambio de regalos, comparte el link con tus amigos y deja que la magia del sorteo haga el resto.
+              ¡Así de simple!
+            </p>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/login" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full h-12 text-base bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200/50"
+                >
+                  Crear mi grupo
+                </Button>
+              </Link>
+              <Link href="/join" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full h-12 text-base bg-white border-slate-300 hover:bg-slate-50 text-slate-700"
+                >
+                  Unirme a un grupo
+                </Button>
+              </Link>
+            </div>
+
+            {/* Social proof */}
+            <div className="pt-6 flex items-center justify-center gap-6 text-sm text-slate-500">
+              <div className="flex items-center gap-1.5">
+                <Users className="w-4 h-4" />
+                <span>Grupos creados</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Ghost className="w-4 h-4" />
+                <span>100% Gratis</span>
+              </div>
             </div>
           </div>
         </section>

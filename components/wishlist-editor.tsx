@@ -4,9 +4,10 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { LinkIcon, Save, Loader2, Check, ExternalLink, Trash2 } from "lucide-react"
+import { LinkIcon, Save, Loader2, Check, ExternalLink, Trash2, Sparkles, Laptop, BookOpen, Shirt, Coffee } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase"
+import { toast } from "sonner"
 
 interface WishlistEditorProps {
   groupId: string
@@ -20,6 +21,35 @@ interface LocalWishlistItem {
   description: string
   url: string
 }
+
+// Configuración de cada slot con placeholder, icono y categoría
+const wishlistSlots = [
+  {
+    placeholder: "Ej: Unos audífonos bluetooth o accesorios para mi setup...",
+    icon: Laptop,
+    category: "Tech/Hobby"
+  },
+  {
+    placeholder: "Ej: El último libro de Stephen King o una novela gráfica...",
+    icon: BookOpen,
+    category: "Libros/Cultura"
+  },
+  {
+    placeholder: "Ej: Una polera negra talla M o calcetines divertidos...",
+    icon: Shirt,
+    category: "Ropa/Estilo"
+  },
+  {
+    placeholder: "Ej: Una planta para mi escritorio o una vela aromática...",
+    icon: Coffee,
+    category: "Decoración/Casa"
+  },
+  {
+    placeholder: "Ej: ¡Sorpréndeme! Me gustan los chocolates amargos...",
+    icon: Sparkles,
+    category: "Comodín"
+  }
+]
 
 export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }: WishlistEditorProps) {
   const [items, setItems] = useState<LocalWishlistItem[]>([])
@@ -98,6 +128,9 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
       }
 
       setLastSaved(new Date())
+      toast.success("Lista de deseos guardada", {
+        icon: <Sparkles className="w-4 h-4" />,
+      })
       if (onSave) {
         onSave()
       }
@@ -126,7 +159,7 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
         <div className="space-y-1">
           <h3 className="text-lg font-semibold text-slate-900">Mi Lista de Deseos</h3>
           <p className="text-sm text-slate-500">
-            Agrega hasta 5 artículos para ayudar a tu Amigo Secreto
+            Agrega hasta 5 deseos para inspirar a tu Amigo Secreto
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -148,79 +181,87 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
       )}
 
       <div className="space-y-3">
-        {items.map((item, index) => (
-          <div
-            key={item.id}
-            className="group relative grid gap-2 p-4 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-sm transition-all"
-          >
-            <span className="absolute -left-2 -top-2 w-6 h-6 rounded-full bg-white text-xs flex items-center justify-center border border-slate-200 text-slate-500 font-mono shadow-sm">
-              {index + 1}
-            </span>
+        {items.map((item, index) => {
+          const slot = wishlistSlots[index]
+          const SlotIcon = slot.icon
 
-            <div className="grid md:grid-cols-[1fr,1fr] gap-3">
-              <div className="space-y-1">
-                <Label htmlFor={`desc-${item.id}`} className="sr-only">
-                  Descripción
-                </Label>
-                <Input
-                  id={`desc-${item.id}`}
-                  placeholder="¿Qué te gustaría? (ej: Mouse Inalámbrico)"
-                  value={item.description}
-                  onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
-                  className="bg-white border-slate-200 focus-visible:ring-indigo-500"
-                />
-              </div>
-
-              <div className="relative flex gap-2">
-                <div className="relative flex-1">
-                  <Label htmlFor={`url-${item.id}`} className="sr-only">
-                    URL
-                  </Label>
-                  <div className="relative">
-                    <LinkIcon
-                      className={cn(
-                        "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
-                        isValidUrl(item.url) ? "text-emerald-500" : "text-slate-400",
-                      )}
-                    />
+          return (
+            <div
+              key={item.id}
+              className="group relative p-4 rounded-xl bg-slate-50 hover:bg-white hover:shadow-md transition-all duration-200"
+            >
+              <div className="space-y-3">
+                {/* Input principal con icono */}
+                <div className="relative flex items-center gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400 group-hover:text-indigo-500 transition-colors shadow-sm">
+                    <SlotIcon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor={`desc-${item.id}`} className="sr-only">
+                      Descripción
+                    </Label>
                     <Input
-                      id={`url-${item.id}`}
-                      placeholder="https://... (Opcional)"
-                      value={item.url}
-                      onChange={(e) => handleItemChange(item.id, "url", e.target.value)}
-                      className={cn(
-                        "pl-9 bg-white pr-9 border-slate-200 focus-visible:ring-indigo-500",
-                        isValidUrl(item.url) &&
-                          "border-emerald-500/50 focus-visible:ring-emerald-500/50 bg-emerald-50/10",
-                      )}
+                      id={`desc-${item.id}`}
+                      placeholder={slot.placeholder}
+                      value={item.description}
+                      onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
+                      className="bg-white border-slate-200 focus-visible:ring-indigo-500 h-10"
                     />
-                    {isValidUrl(item.url) && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    )}
+                  </div>
+                  {(item.description || item.url) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleClearItem(item.id)}
+                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Input de URL secundario */}
+                <div className="pl-11">
+                  <div className="relative">
+                    <Label htmlFor={`url-${item.id}`} className="sr-only">
+                      URL
+                    </Label>
+                    <div className="relative">
+                      <LinkIcon
+                        className={cn(
+                          "absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors",
+                          isValidUrl(item.url) ? "text-emerald-500" : "text-slate-300",
+                        )}
+                      />
+                      <Input
+                        id={`url-${item.id}`}
+                        placeholder="Pegar enlace (opcional)"
+                        value={item.url}
+                        onChange={(e) => handleItemChange(item.id, "url", e.target.value)}
+                        className={cn(
+                          "pl-9 pr-9 h-8 text-sm bg-white/80 border-slate-200 focus-visible:ring-indigo-500 placeholder:text-slate-400",
+                          isValidUrl(item.url) &&
+                            "border-emerald-500/50 focus-visible:ring-emerald-500/50 bg-emerald-50/30",
+                        )}
+                      />
+                      {isValidUrl(item.url) && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {(item.description || item.url) && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleClearItem(item.id)}
-                    className="h-9 w-9 text-slate-400 hover:text-red-500 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="flex justify-end">
