@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
-import { generateDerangement } from '@/lib/derangement'
+import { generateDerangement, type ExclusionMap } from '@/lib/derangement'
 import { groupIdSchema } from '@/lib/validations'
 
 interface DrawResult {
@@ -62,11 +62,31 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
   // Extract user IDs
   const participantIds = members.map(m => m.user_id)
 
-  // Generate derangement
-  const receivers = generateDerangement(participantIds)
+  // Get exclusions (gifting restrictions)
+  const { data: exclusionsData } = await supabase
+    .from('exclusions')
+    .select('giver_id, excluded_receiver_id')
+    .eq('group_id', groupId)
+
+  // Build exclusion map
+  const exclusions: ExclusionMap = new Map()
+  if (exclusionsData && exclusionsData.length > 0) {
+    for (const exc of exclusionsData) {
+      if (!exclusions.has(exc.giver_id)) {
+        exclusions.set(exc.giver_id, new Set())
+      }
+      exclusions.get(exc.giver_id)!.add(exc.excluded_receiver_id)
+    }
+  }
+
+  // Generate derangement with exclusions
+  const receivers = generateDerangement(participantIds, exclusions)
 
   if (!receivers) {
-    return { success: false, error: 'Error al generar el sorteo' }
+    return {
+      success: false,
+      error: 'No se pudo generar un sorteo válido con las restricciones actuales. Por favor, revisa las exclusiones configuradas.'
+    }
   }
 
   // Create matches
