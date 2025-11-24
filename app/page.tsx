@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { LandingHeader } from "@/components/landing-header"
+import { Footer } from "@/components/footer"
 import { Ghost, Calendar, Share2, Shuffle, Heart, Shield, Zap, Users, Star } from "lucide-react"
 
 const jsonLd = {
@@ -66,20 +68,7 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-slate-200">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl text-indigo-600">
-            <Ghost className="w-6 h-6" />
-            <span>GhostSwap</span>
-          </div>
-          <Link href="/login">
-            <Button variant="ghost" className="font-medium hover:text-indigo-600 hover:bg-indigo-50">
-              Entrar
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <LandingHeader />
 
       <main className="flex-1">
         {/* Hero Section */}
@@ -239,9 +228,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="py-6 text-center text-slate-400 text-sm bg-white border-t border-slate-200">
-        <p>&copy; {new Date().getFullYear()} GhostSwap - Amigo Secreto e Intercambio de Regalos</p>
-      </footer>
+      <Footer />
     </div>
   )
 }
