@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button"
 import { LandingHeader } from "@/components/landing-header"
 import { Footer } from "@/components/footer"
 import { AuroraBackground } from "@/components/aurora-background"
-import { Ghost, Calendar, Share2, Shuffle, Heart, Shield, Zap, Users, Star } from "lucide-react"
+import { AnimatedFeatures } from "@/components/animated-features"
+import { SectionAurora } from "@/components/section-aurora"
+import { Ghost, Calendar, Share2, Shuffle, Users, Star } from "lucide-react"
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -143,7 +145,7 @@ export default function LandingPage() {
                 <div className="w-16 h-16 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600 mb-2 rotate-3 hover:rotate-6 transition-transform">
                   <Calendar className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">1. Crea tu sala</h3>
+                <h3 className="text-xl font-bold text-slate-900">1. Crea tu grupo</h3>
                 <p className="text-slate-600 leading-relaxed">
                   Define la fecha del intercambio, el presupuesto máximo y las reglas del juego.
                 </p>
@@ -174,65 +176,38 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features */}
-        <section className="py-16 px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl font-bold text-slate-900 mb-3">¿Por qué GhostSwap para tu Secret Santa?</h2>
-              <p className="text-slate-500">Hecho con cariño para que disfrutes la experiencia</p>
+        {/* Features + CTA Section with Aurora Background */}
+        <section className="relative py-16 px-4 overflow-hidden">
+          <SectionAurora />
+
+          <div className="relative z-10">
+            {/* Features */}
+            <div className="max-w-4xl mx-auto mb-16">
+              <div className="text-center mb-12">
+                <h2 className="text-2xl font-bold text-slate-900 mb-3">¿Por qué GhostSwap para tu Secret Santa?</h2>
+                <p className="text-slate-500">Hecho con cariño para que disfrutes la experiencia</p>
+              </div>
+
+              <AnimatedFeatures />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
-                <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 mb-4">
-                  <Heart className="w-5 h-5" />
-                </div>
-                <h3 className="font-semibold text-slate-900 mb-2">Totalmente gratis</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                  Sin costos ocultos, sin versiones premium. Funcionalidad completa para todos.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 mb-4">
-                  <Shield className="w-5 h-5" />
-                </div>
-                <h3 className="font-semibold text-slate-900 mb-2">Tu privacidad importa</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                  No vendemos ni compartimos tus datos. Tu información está segura.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
-                <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 mb-4">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <h3 className="font-semibold text-slate-900 mb-2">Sin spam</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
-                  Solo notificaciones esenciales. Nada de correos innecesarios.
-                </p>
-              </div>
+            {/* CTA Final */}
+            <div className="max-w-2xl mx-auto text-center">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">
+                ¿Listos para el intercambio de regalos?
+              </h2>
+              <p className="text-slate-500 mb-6">
+                En menos de un minuto tendrás tu grupo de Amigo Secreto listo. ¡Solo falta que invites a tus amigos!
+              </p>
+              <Link href="/login">
+                <Button
+                  size="lg"
+                  className="h-12 px-8 text-base bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200/50"
+                >
+                  Comenzar ahora
+                </Button>
+              </Link>
             </div>
-          </div>
-        </section>
-
-        {/* CTA Final */}
-        <section className="py-16 px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              ¿Listos para el intercambio de regalos?
-            </h2>
-            <p className="text-slate-500 mb-6">
-              En menos de un minuto tendrás tu grupo de Amigo Secreto listo. ¡Solo falta que invites a tus amigos!
-            </p>
-            <Link href="/login">
-              <Button
-                size="lg"
-                className="h-12 px-8 text-base bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200/50"
-              >
-                Comenzar ahora
-              </Button>
-            </Link>
           </div>
         </section>
       </main>

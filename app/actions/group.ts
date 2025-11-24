@@ -145,6 +145,76 @@ export async function leaveGroup(groupId: string) {
   return { success: true }
 }
 
+export async function removeMember(groupId: string, memberId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: "No autenticado" }
+  }
+
+  // Verify user is admin
+  const { data: group } = await supabase
+    .from('groups')
+    .select('admin_id, status')
+    .eq('id', groupId)
+    .single()
+
+  if (!group || group.admin_id !== user.id) {
+    return { success: false, error: "No tienes permisos para eliminar miembros" }
+  }
+
+  if (group.status === 'DRAWN') {
+    return { success: false, error: "No puedes eliminar miembros después del sorteo" }
+  }
+
+  // Get member info for activity log
+  const { data: member } = await supabase
+    .from('members')
+    .select(`
+      user_id,
+      profiles:user_id (
+        full_name,
+        email
+      )
+    `)
+    .eq('id', memberId)
+    .eq('group_id', groupId)
+    .single()
+
+  if (!member) {
+    return { success: false, error: "Miembro no encontrado" }
+  }
+
+  // Can't remove yourself (admin)
+  if (member.user_id === user.id) {
+    return { success: false, error: "No puedes eliminarte a ti mismo" }
+  }
+
+  // Delete member
+  const { error } = await supabase
+    .from('members')
+    .delete()
+    .eq('id', memberId)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  // Log activity
+  const memberProfile = member.profiles as { full_name: string | null; email: string } | null
+  await supabase
+    .from('activities')
+    .insert({
+      group_id: groupId,
+      user_id: user.id,
+      type: 'MEMBER_REMOVED',
+      message: `${memberProfile?.full_name || memberProfile?.email || 'Un miembro'} fue eliminado del grupo`
+    })
+
+  return { success: true }
+}
+
 export async function getGroupActivities(groupId: string) {
   const supabase = await createClient()
 
