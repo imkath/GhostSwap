@@ -41,7 +41,7 @@
 
 ## 🚀 Demo
 
-👉 **[ghostswap-phi.vercel.app](https://ghostswap-phi.vercel.app)**
+👉 **[ghostswap.kthcsk.me](https://ghostswap.kthcsk.me)**
 
 ---
 
