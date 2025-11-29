@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 
 export function SectionAurora() {
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true" role="presentation">
       {/* Violet orb - top right */}
       <motion.div
         className="absolute w-[400px] h-[400px] rounded-full bg-violet-400 opacity-30 blur-[80px]"

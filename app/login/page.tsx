@@ -101,7 +101,7 @@ export default function LoginPage() {
               <span className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-400">O ingresa con correo</span>
+              <span className="bg-white px-2 text-slate-500">O ingresa con correo</span>
             </div>
           </div>
 
@@ -134,7 +134,8 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 p-2 min-w-11 min-h-11 flex items-center justify-center"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -153,15 +154,15 @@ export default function LoginPage() {
           </form>
 
           <div className="flex justify-between text-sm">
-            <Link href="/register" className="text-indigo-600 hover:text-indigo-700">
+            <Link href="/register" className="text-indigo-600 hover:text-indigo-700 py-2 inline-block">
               Crear cuenta
             </Link>
-            <Link href="/forgot-password" className="text-slate-500 hover:text-slate-700">
+            <Link href="/forgot-password" className="text-slate-500 hover:text-slate-700 py-2 inline-block">
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
 
-          <p className="text-xs text-center text-slate-400 pt-2">
+          <p className="text-xs text-center text-slate-500 pt-2">
             Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad.
           </p>
         </div>

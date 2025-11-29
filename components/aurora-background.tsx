@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 
 export function AuroraBackground() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true" role="presentation">
       {/* Orb 1 - Indigo */}
       <motion.div
         className="absolute w-[500px] h-[500px] rounded-full bg-indigo-500 opacity-60 blur-[50px]"

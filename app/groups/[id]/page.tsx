@@ -223,10 +223,11 @@ export default function GroupPage() {
             .eq('user_id', matchData.receiver_id)
             .single()
 
+          const receiverData = matchData.receiver as unknown as { full_name: string | null; email: string; avatar_url: string | null }
           setMatch({
             receiver_id: matchData.receiver_id,
-            receiver: matchData.receiver,
-            receiver_wishlist: receiverMember?.wishlist || []
+            receiver: receiverData,
+            receiver_wishlist: (receiverMember?.wishlist as Array<{ description: string; url?: string }>) || []
           })
         }
       }

@@ -70,7 +70,7 @@ export function ShareButton({ groupId, groupName, className }: ShareButtonProps)
         </>
       ) : (
         <>
-          {navigator.share ? (
+          {typeof navigator !== 'undefined' && 'share' in navigator ? (
             <Share2 className="w-4 h-4 mr-2" />
           ) : (
             <Copy className="w-4 h-4 mr-2" />
