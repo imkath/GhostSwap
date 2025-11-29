@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
@@ -13,6 +13,13 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono"
 })
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#4f46e5',
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ghostswap-phi.vercel.app'),
@@ -58,7 +65,7 @@ export const metadata: Metadata = {
     description: 'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos, listas de deseos y comparte por WhatsApp.',
     images: [
       {
-        url: '/og-image.png',
+        url: '/api/og',
         width: 1200,
         height: 630,
         alt: 'GhostSwap - Amigo Secreto Online',
@@ -69,7 +76,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'GhostSwap - Organiza tu Amigo Secreto Online Gratis',
     description: 'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos y listas de deseos.',
-    images: ['/og-image.png'],
+    images: ['/api/og'],
     creator: '@ghostswap',
   },
   alternates: {
@@ -92,11 +99,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#4f46e5" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         {children}

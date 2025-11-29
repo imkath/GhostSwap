@@ -237,7 +237,8 @@ export async function removeMember(groupId: string, memberId: string) {
   }
 
   // Log activity
-  const memberProfile = member.profiles as { full_name: string | null; email: string } | null
+  const profilesData = member.profiles as unknown as { full_name: string | null; email: string } | { full_name: string | null; email: string }[] | null
+  const memberProfile = Array.isArray(profilesData) ? profilesData[0] : profilesData
   await supabase
     .from('activities')
     .insert({

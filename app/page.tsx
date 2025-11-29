@@ -73,22 +73,22 @@ export default function LandingPage() {
       />
       <LandingHeader />
 
-      <main className="flex-1">
+      <main className="flex-1" role="main">
         {/* Hero Section */}
-        <section className="relative py-16 md:py-24 px-4">
+        <section className="relative py-16 md:py-24 px-4" aria-labelledby="hero-title">
           {/* Aurora Background - full width */}
           <AuroraBackground />
           {/* Content overlay for readability */}
-          <div className="absolute inset-0 bg-slate-50/70 pointer-events-none" />
+          <div className="absolute inset-0 bg-slate-50/70 pointer-events-none" aria-hidden="true" />
 
           {/* Content with z-index to stay above background */}
           <div className="relative z-10 space-y-6 text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-sm font-medium border border-indigo-100">
-              <Star className="w-3.5 h-3.5" />
+              <Star className="w-3.5 h-3.5" aria-hidden="true" />
               Sorteos invisibles, regalos inolvidables
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
+            <h1 id="hero-title" className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
               Organiza el <span className="text-indigo-600">Amigo Secreto</span> más genial con GhostSwap
             </h1>
 
@@ -118,13 +118,13 @@ export default function LandingPage() {
             </div>
 
             {/* Social proof */}
-            <div className="pt-6 flex items-center justify-center gap-6 text-sm text-slate-500">
+            <div className="pt-6 flex items-center justify-center gap-6 text-sm text-slate-500" aria-label="Beneficios de GhostSwap">
               <div className="flex items-center gap-1.5">
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4" aria-hidden="true" />
                 <span>Grupos creados</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Ghost className="w-4 h-4" />
+                <Ghost className="w-4 h-4" aria-hidden="true" />
                 <span>100% Gratis</span>
               </div>
             </div>
@@ -132,60 +132,60 @@ export default function LandingPage() {
         </section>
 
         {/* How it works */}
-        <section className="py-20 bg-white border-y border-slate-200">
+        <section className="py-20 bg-white border-y border-slate-200" aria-labelledby="how-it-works-title">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">¿Cómo funciona el Amigo Secreto?</h2>
+              <h2 id="how-it-works-title" className="text-3xl font-bold text-slate-900 mb-4">¿Cómo funciona el Amigo Secreto?</h2>
               <p className="text-slate-500 text-lg">Tres pasos simples para tu intercambio de regalos perfecto</p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+            <ol className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto list-none">
               {/* Step 1 */}
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600 mb-2 rotate-3 hover:rotate-6 transition-transform">
+              <li className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600 mb-2 rotate-3 hover:rotate-6 transition-transform" aria-hidden="true">
                   <Calendar className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">1. Crea tu grupo</h3>
                 <p className="text-slate-600 leading-relaxed">
                   Define la fecha del intercambio, el presupuesto máximo y las reglas del juego.
                 </p>
-              </div>
+              </li>
 
               {/* Step 2 */}
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 mb-2 -rotate-3 hover:-rotate-6 transition-transform">
+              <li className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 mb-2 -rotate-3 hover:-rotate-6 transition-transform" aria-hidden="true">
                   <Share2 className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">2. Comparte el link</h3>
                 <p className="text-slate-600 leading-relaxed">
                   Envía el enlace a tus amigos. Ellos se unen, crean su perfil y agregan sus deseos.
                 </p>
-              </div>
+              </li>
 
               {/* Step 3 */}
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-teal-100 flex items-center justify-center text-teal-600 mb-2 rotate-3 hover:rotate-6 transition-transform">
+              <li className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-teal-100 flex items-center justify-center text-teal-600 mb-2 rotate-3 hover:rotate-6 transition-transform" aria-hidden="true">
                   <Shuffle className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">3. El Sorteo Secreto</h3>
                 <p className="text-slate-600 leading-relaxed">
                   Un clic y listo. Cada quien descubre su Amigo Secreto. Sin repeticiones, sin errores.
                 </p>
-              </div>
-            </div>
+              </li>
+            </ol>
           </div>
         </section>
 
         {/* Features + CTA Section with Aurora Background */}
-        <section className="relative py-16 px-4 overflow-hidden">
+        <section className="relative py-16 px-4 overflow-hidden" aria-labelledby="features-title">
           <SectionAurora />
 
           <div className="relative z-10">
             {/* Features */}
             <div className="max-w-4xl mx-auto mb-16">
               <div className="text-center mb-12">
-                <h2 className="text-2xl font-bold text-slate-900 mb-3">¿Por qué GhostSwap para tu Secret Santa?</h2>
-                <p className="text-slate-500">Hecho con cariño para que disfrutes la experiencia</p>
+                <h2 id="features-title" className="text-2xl font-bold text-slate-900 mb-3">¿Por qué GhostSwap para tu Secret Santa?</h2>
+                <p className="text-slate-600">Hecho con cariño para que disfrutes la experiencia</p>
               </div>
 
               <AnimatedFeatures />
@@ -196,7 +196,7 @@ export default function LandingPage() {
               <h2 className="text-2xl font-bold text-slate-900 mb-4">
                 ¿Listos para el intercambio de regalos?
               </h2>
-              <p className="text-slate-500 mb-6">
+              <p className="text-slate-600 mb-6">
                 En menos de un minuto tendrás tu grupo de Amigo Secreto listo. ¡Solo falta que invites a tus amigos!
               </p>
               <Link href="/login">
