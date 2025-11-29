@@ -82,15 +82,18 @@ export default function DashboardPage() {
 
         const formattedGroups: Group[] = memberGroups
           .filter(mg => mg.groups)
-          .map(mg => ({
-            id: mg.groups.id,
-            name: mg.groups.name,
-            budget: mg.groups.budget,
-            exchange_date: mg.groups.exchange_date,
-            status: mg.groups.status,
-            member_count: countMap[mg.group_id] || 0,
-            is_admin: mg.is_admin
-          }))
+          .map(mg => {
+            const group = mg.groups as unknown as { id: string; name: string; budget: number | null; exchange_date: string | null; status: "PLANNING" | "DRAWN"; admin_id: string }
+            return {
+              id: group.id,
+              name: group.name,
+              budget: group.budget,
+              exchange_date: group.exchange_date,
+              status: group.status,
+              member_count: countMap[mg.group_id] || 0,
+              is_admin: mg.is_admin as boolean
+            }
+          })
 
         setGroups(formattedGroups)
       }
