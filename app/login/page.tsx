@@ -12,9 +12,11 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+  const verified = searchParams.get('verified') === 'true'
+  const urlError = searchParams.get('error')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(urlError || '')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -112,6 +114,11 @@ function LoginForm() {
 
           {/* Email/Password Sign In */}
           <form onSubmit={handleCredentialsSignIn} className="space-y-4">
+            {verified && (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-600">
+                ¡Tu cuenta ha sido verificada! Ahora puedes iniciar sesión.
+              </div>
+            )}
             {error && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
                 {error}
