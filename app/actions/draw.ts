@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { generateDerangement, type ExclusionMap } from '@/lib/derangement'
 import { groupIdSchema } from '@/lib/validations'
+import { sendDrawNotifications } from '@/lib/email'
 
 interface DrawResult {
   success: boolean
@@ -45,10 +46,10 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
     return { success: false, error: 'El sorteo ya fue realizado' }
   }
 
-  // Get all members
+  // Get all members with their profile info for email notifications
   const { data: members, error: membersError } = await supabase
     .from('members')
-    .select('user_id')
+    .select('user_id, profiles(full_name, email)')
     .eq('group_id', groupId)
 
   if (membersError || !members) {
@@ -125,6 +126,23 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
       type: 'DRAW',
       message: `El sorteo de "${group.name}" ha sido realizado. ¡Revisa quién te tocó!`
     })
+
+  // Send email notifications to all participants (don't await, run in background)
+  const participants = members
+    .map((m) => {
+      const profile = m.profiles as unknown as { full_name: string | null; email: string } | null
+      if (!profile?.email) return null
+      return {
+        email: profile.email,
+        name: profile.full_name || 'Participante',
+      }
+    })
+    .filter((p): p is { email: string; name: string } => p !== null)
+
+  // Fire and forget - don't block the response
+  sendDrawNotifications(participants, group.name, groupId).catch((err) => {
+    console.error('Error sending draw notifications:', err)
+  })
 
   revalidatePath(`/groups/${groupId}`)
 
