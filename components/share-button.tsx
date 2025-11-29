@@ -16,11 +16,15 @@ export function ShareButton({ inviteCode, groupName, className }: ShareButtonPro
   const inviteUrl =
     typeof window !== 'undefined' ? `${window.location.origin}/join?code=${inviteCode}` : ''
 
+  // Message to share - URL on separate line to avoid concatenation issues
+  const shareMessage = `¡Te han invitado al intercambio de regalos "${groupName}"!\n\n${inviteUrl}`
+
   const handleShare = async () => {
+    // For Web Share API, only use text (which includes the URL)
+    // This avoids the issue where some apps concatenate text+url incorrectly
     const shareData = {
       title: `Únete a ${groupName}`,
-      text: `¡Te han invitado al intercambio de regalos "${groupName}"!`,
-      url: inviteUrl,
+      text: shareMessage,
     }
 
     // Try Web Share API first (mobile/supported browsers)
@@ -36,7 +40,7 @@ export function ShareButton({ inviteCode, groupName, className }: ShareButtonPro
       }
     }
 
-    // Fallback to clipboard
+    // Fallback to clipboard - copy just the URL for simplicity
     try {
       await navigator.clipboard.writeText(inviteUrl)
       setCopied(true)
