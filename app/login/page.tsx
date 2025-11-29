@@ -1,20 +1,20 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Gift, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react"
-import { useState, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { createClient } from "@/lib/supabase"
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Gift, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -31,7 +31,7 @@ function LoginForm() {
   const handleCredentialsSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError("")
+    setError('')
 
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({
@@ -40,9 +40,9 @@ function LoginForm() {
     })
 
     if (error) {
-      setError(error.message === "Invalid login credentials"
-        ? "Credenciales inválidas"
-        : error.message)
+      setError(
+        error.message === 'Invalid login credentials' ? 'Credenciales inválidas' : error.message
+      )
       setIsLoading(false)
     } else {
       router.push(redirectTo)
@@ -51,18 +51,21 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-slate-50">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
       <div className="absolute top-4 left-4 md:top-8 md:left-8">
-        <Link href="/" className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+        <Link
+          href="/"
+          className="flex items-center text-slate-500 transition-colors hover:text-indigo-600"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Volver
         </Link>
       </div>
 
-      <div className="w-full max-w-[400px] bg-white p-8 rounded-2xl shadow-[0_20px_50px_rgba(99,102,241,0.15)] border border-slate-100">
-        <div className="text-center mb-8 space-y-2">
-          <div className="inline-flex p-3 rounded-full bg-indigo-50 text-indigo-600 mb-2">
-            <Gift className="w-8 h-8" />
+      <div className="w-full max-w-[400px] rounded-2xl border border-slate-100 bg-white p-8 shadow-[0_20px_50px_rgba(99,102,241,0.15)]">
+        <div className="mb-8 space-y-2 text-center">
+          <div className="mb-2 inline-flex rounded-full bg-indigo-50 p-3 text-indigo-600">
+            <Gift className="h-8 w-8" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Bienvenido</h1>
           <p className="text-slate-500">Ingresa para gestionar tus intercambios</p>
@@ -73,10 +76,10 @@ function LoginForm() {
           <Button
             size="lg"
             variant="outline"
-            className="w-full h-12 text-base font-medium relative hover:bg-slate-100 border-slate-300 text-slate-800 bg-white shadow-sm"
+            className="relative h-12 w-full border-slate-300 bg-white text-base font-medium text-slate-800 shadow-sm hover:bg-slate-100"
             onClick={handleGoogleSignIn}
           >
-            <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+            <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -110,7 +113,7 @@ function LoginForm() {
           {/* Email/Password Sign In */}
           <form onSubmit={handleCredentialsSignIn} className="space-y-4">
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
                 {error}
               </div>
             )}
@@ -118,17 +121,17 @@ function LoginForm() {
               <Input
                 type="email"
                 placeholder="nombre@ejemplo.com"
-                className="h-11 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
+                className="h-11 border-slate-300 bg-white text-slate-900 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
-            <div className="space-y-2 relative">
+            <div className="relative space-y-2">
               <Input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Contraseña"
-                className="h-11 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500 pr-10"
+                className="h-11 border-slate-300 bg-white pr-10 text-slate-900 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -136,35 +139,37 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 p-2 min-w-11 min-h-11 flex items-center justify-center"
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                className="absolute top-1/2 right-2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center p-2 text-slate-500 hover:text-slate-700"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             <Button
               type="submit"
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200/50"
+              className="h-11 w-full bg-indigo-600 shadow-lg shadow-indigo-200/50 hover:bg-indigo-700"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Ingresar"
-              )}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Ingresar'}
             </Button>
           </form>
 
           <div className="flex justify-between text-sm">
-            <Link href="/register" className="text-indigo-600 hover:text-indigo-700 py-2 inline-block">
+            <Link
+              href={`/register${redirectTo !== '/dashboard' ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ''}`}
+              className="inline-block py-2 text-indigo-600 hover:text-indigo-700"
+            >
               Crear cuenta
             </Link>
-            <Link href="/forgot-password" className="text-slate-500 hover:text-slate-700 py-2 inline-block">
+            <Link
+              href="/forgot-password"
+              className="inline-block py-2 text-slate-500 hover:text-slate-700"
+            >
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
 
-          <p className="text-xs text-center text-slate-500 pt-2">
+          <p className="pt-2 text-center text-xs text-slate-500">
             Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad.
           </p>
         </div>
@@ -175,11 +180,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </main>
-    }>
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        </main>
+      }
+    >
       <LoginForm />
     </Suspense>
   )
