@@ -16,6 +16,17 @@ interface GroupPreview {
   member_count: number
 }
 
+// Extract valid invite code (12 hex chars) from text that might contain extra content
+const extractInviteCode = (input: string): string => {
+  // First try to find a 12-char hex string in the input
+  const hexMatch = input.match(/[0-9a-f]{12}/i)
+  if (hexMatch) {
+    return hexMatch[0].toLowerCase()
+  }
+  // If no valid code found, return the trimmed input (will fail validation later)
+  return input.trim()
+}
+
 function JoinGroupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -27,7 +38,9 @@ function JoinGroupContent() {
   const [joined, setJoined] = useState(false)
 
   useEffect(() => {
-    const code = searchParams.get('code')
+    const rawCode = searchParams.get('code')
+    const code = rawCode ? extractInviteCode(rawCode) : null
+
     if (code) {
       setInviteCode(code)
       // Auto-fetch group preview
@@ -319,9 +332,12 @@ function JoinGroupContent() {
                 className="h-11 font-mono"
                 value={inviteCode}
                 onChange={(e) => {
-                  setInviteCode(e.target.value)
-                  if (e.target.value.length >= 12) {
-                    fetchGroupPreview(e.target.value)
+                  const value = e.target.value
+                  // Extract valid code if user pastes text with extra content
+                  const cleanCode = value.length > 12 ? extractInviteCode(value) : value
+                  setInviteCode(cleanCode)
+                  if (cleanCode.length >= 12) {
+                    fetchGroupPreview(cleanCode)
                   } else {
                     setGroupPreview(null)
                   }
