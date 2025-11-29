@@ -5,15 +5,23 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  // Support both 'next' (our custom) and 'redirect_to' (Supabase default)
+  const token_hash = requestUrl.searchParams.get('token_hash')
+  const token = requestUrl.searchParams.get('token') // Some Supabase versions use 'token'
+  const type = requestUrl.searchParams.get('type')
+  const error_description = requestUrl.searchParams.get('error_description')
+
+  // Support multiple redirect param names
   const next =
     requestUrl.searchParams.get('next') ||
     requestUrl.searchParams.get('redirect_to') ||
     '/dashboard'
 
-  // Handle email confirmation token_hash (from Supabase email links)
-  const token_hash = requestUrl.searchParams.get('token_hash')
-  const type = requestUrl.searchParams.get('type')
+  // If Supabase returned an error, redirect to login with that error
+  if (error_description) {
+    return NextResponse.redirect(
+      new URL(`/login?error=${encodeURIComponent(error_description)}`, requestUrl.origin)
+    )
+  }
 
   const cookieStore = await cookies()
 
@@ -46,17 +54,27 @@ export async function GET(request: Request) {
     }
   }
 
-  // Handle email confirmation via token_hash (email verification link)
-  if (token_hash && type) {
+  // Handle email confirmation via token_hash or token (Supabase email verification)
+  const verificationToken = token_hash || token
+  if (verificationToken && type) {
     const { error } = await supabase.auth.verifyOtp({
-      token_hash,
+      token_hash: verificationToken,
       type: type as 'signup' | 'email' | 'recovery' | 'invite',
     })
     if (!error) {
-      return NextResponse.redirect(new URL(next, requestUrl.origin))
+      // Successfully verified - redirect to login with success message
+      return NextResponse.redirect(new URL('/login?verified=true', requestUrl.origin))
     }
   }
 
-  // Return to error page or login on failure
-  return NextResponse.redirect(new URL('/login?error=auth_callback_error', requestUrl.origin))
+  // If no valid params, check if user is already authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) {
+    return NextResponse.redirect(new URL(next, requestUrl.origin))
+  }
+
+  // Return to login page - user needs to log in after verification
+  return NextResponse.redirect(new URL('/login', requestUrl.origin))
 }
