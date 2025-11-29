@@ -1,21 +1,20 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { Share2, Copy, Check } from "lucide-react"
-import { useState } from "react"
+import { Button } from '@/components/ui/button'
+import { Share2, Copy, Check } from 'lucide-react'
+import { useState } from 'react'
 
 interface ShareButtonProps {
-  groupId: string
+  inviteCode: string
   groupName: string
   className?: string
 }
 
-export function ShareButton({ groupId, groupName, className }: ShareButtonProps) {
+export function ShareButton({ inviteCode, groupName, className }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
-  const inviteUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/join?group=${groupId}`
-    : ''
+  const inviteUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}/join?code=${inviteCode}` : ''
 
   const handleShare = async () => {
     const shareData = {
@@ -58,22 +57,18 @@ export function ShareButton({ groupId, groupName, className }: ShareButtonProps)
   }
 
   return (
-    <Button
-      onClick={handleShare}
-      className={className}
-      variant={copied ? "outline" : "default"}
-    >
+    <Button onClick={handleShare} className={className} variant={copied ? 'outline' : 'default'}>
       {copied ? (
         <>
-          <Check className="w-4 h-4 mr-2" />
+          <Check className="mr-2 h-4 w-4" />
           ¡Copiado!
         </>
       ) : (
         <>
           {typeof navigator !== 'undefined' && 'share' in navigator ? (
-            <Share2 className="w-4 h-4 mr-2" />
+            <Share2 className="mr-2 h-4 w-4" />
           ) : (
-            <Copy className="w-4 h-4 mr-2" />
+            <Copy className="mr-2 h-4 w-4" />
           )}
           Copiar Link de Invitación
         </>
