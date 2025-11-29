@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { AppHeader } from "@/components/app-header"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { AppHeader } from '@/components/app-header'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   CheckCircle2,
   Clock,
@@ -27,7 +27,6 @@ import {
   Ghost,
   Eye,
   EyeOff,
-  Share2,
   Copy,
   Check,
   Loader2,
@@ -38,21 +37,27 @@ import {
   Pencil,
   UserMinus,
   RotateCcw,
-  AlertTriangle
-} from "lucide-react"
-import { useParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { createClient } from "@/lib/supabase"
-import { drawNames, resetDraw } from "@/app/actions/draw"
-import { updateGroup, deleteGroup, leaveGroup, getGroupActivities, removeMember } from "@/app/actions/group"
-import confetti from "canvas-confetti"
-import { WishlistEditor } from "@/components/wishlist-editor"
-import { GroupPageSkeleton } from "@/components/skeletons"
-import { GroupInfoCard } from "@/components/group-info-card"
-import { ExclusionsManager } from "@/components/exclusions-manager"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
+  AlertTriangle,
+} from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
+import { drawNames, resetDraw } from '@/app/actions/draw'
+import {
+  updateGroup,
+  deleteGroup,
+  leaveGroup,
+  getGroupActivities,
+  removeMember,
+} from '@/app/actions/group'
+import confetti from 'canvas-confetti'
+import { WishlistEditor } from '@/components/wishlist-editor'
+import { GroupPageSkeleton } from '@/components/skeletons'
+import { GroupInfoCard } from '@/components/group-info-card'
+import { ExclusionsManager } from '@/components/exclusions-manager'
+import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 
 interface Member {
   id: string
@@ -82,7 +87,7 @@ interface Group {
   budget: number | null
   currency: string
   exchange_date: string | null
-  status: "PLANNING" | "DRAWN"
+  status: 'PLANNING' | 'DRAWN'
   invite_code: string
   admin_id: string
 }
@@ -98,7 +103,7 @@ export default function GroupPage() {
   const [currentMember, setCurrentMember] = useState<Member | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [isDrawing, setIsDrawing] = useState(false)
 
@@ -112,20 +117,22 @@ export default function GroupPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [showActivityDialog, setShowActivityDialog] = useState(false)
-  const [activities, setActivities] = useState<Array<{
-    id: string
-    type: string
-    message: string
-    created_at: string
-    profiles: { full_name: string | null; email: string; avatar_url: string | null }
-  }>>([])
+  const [activities, setActivities] = useState<
+    Array<{
+      id: string
+      type: string
+      message: string
+      created_at: string
+      profiles: { full_name: string | null; email: string; avatar_url: string | null }
+    }>
+  >([])
   const [isLoadingActivities, setIsLoadingActivities] = useState(false)
 
   // Edit form state
-  const [editName, setEditName] = useState("")
-  const [editBudget, setEditBudget] = useState("")
-  const [editCurrency, setEditCurrency] = useState("CLP")
-  const [editDate, setEditDate] = useState("")
+  const [editName, setEditName] = useState('')
+  const [editBudget, setEditBudget] = useState('')
+  const [editCurrency, setEditCurrency] = useState('CLP')
+  const [editDate, setEditDate] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
@@ -142,9 +149,11 @@ export default function GroupPage() {
 
     try {
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) {
-        router.push("/login")
+        router.push('/login')
         return
       }
       setCurrentUserId(user.id)
@@ -157,7 +166,7 @@ export default function GroupPage() {
         .single()
 
       if (groupError || !groupData) {
-        setError("Grupo no encontrado")
+        setError('Grupo no encontrado')
         setIsLoading(false)
         return
       }
@@ -168,7 +177,8 @@ export default function GroupPage() {
       // Get members with profiles
       const { data: membersData } = await supabase
         .from('members')
-        .select(`
+        .select(
+          `
           id,
           user_id,
           wishlist,
@@ -178,21 +188,22 @@ export default function GroupPage() {
             email,
             avatar_url
           )
-        `)
+        `
+        )
         .eq('group_id', groupId)
 
       if (membersData) {
-        const formattedMembers = membersData.map(m => ({
+        const formattedMembers = membersData.map((m) => ({
           id: m.id,
           user_id: m.user_id,
           wishlist: m.wishlist || [],
           is_admin: m.is_admin,
-          profile: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+          profile: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
         }))
         setMembers(formattedMembers)
 
         // Set current member
-        const myMember = formattedMembers.find(m => m.user_id === user.id)
+        const myMember = formattedMembers.find((m) => m.user_id === user.id)
         if (myMember) {
           setCurrentMember(myMember)
         }
@@ -202,14 +213,16 @@ export default function GroupPage() {
       if (groupData.status === 'DRAWN') {
         const { data: matchData } = await supabase
           .from('matches')
-          .select(`
+          .select(
+            `
             receiver_id,
             receiver:receiver_id (
               full_name,
               email,
               avatar_url
             )
-          `)
+          `
+          )
           .eq('group_id', groupId)
           .eq('giver_id', user.id)
           .single()
@@ -223,17 +236,21 @@ export default function GroupPage() {
             .eq('user_id', matchData.receiver_id)
             .single()
 
-          const receiverData = matchData.receiver as unknown as { full_name: string | null; email: string; avatar_url: string | null }
+          const receiverData = matchData.receiver as unknown as {
+            full_name: string | null
+            email: string
+            avatar_url: string | null
+          }
           setMatch({
             receiver_id: matchData.receiver_id,
             receiver: receiverData,
-            receiver_wishlist: (receiverMember?.wishlist as Array<{ description: string; url?: string }>) || []
+            receiver_wishlist:
+              (receiverMember?.wishlist as Array<{ description: string; url?: string }>) || [],
           })
         }
       }
-
     } catch {
-      setError("Error al cargar el grupo")
+      setError('Error al cargar el grupo')
     } finally {
       setIsLoading(false)
     }
@@ -243,15 +260,15 @@ export default function GroupPage() {
     if (!group) return
     setShowDrawConfirm(false)
     setIsDrawing(true)
-    setError("")
+    setError('')
 
     const result = await drawNames(group.id)
 
     if (!result.success) {
-      setError(result.error || "Error al realizar el sorteo")
-      toast.error("Error al realizar el sorteo")
+      setError(result.error || 'Error al realizar el sorteo')
+      toast.error('Error al realizar el sorteo')
     } else {
-      toast.success("¡Sorteo realizado con éxito!")
+      toast.success('¡Sorteo realizado con éxito!')
       // Reload data to get match
       await fetchGroupData()
     }
@@ -263,33 +280,33 @@ export default function GroupPage() {
     if (!group) return
     const inviteUrl = `${window.location.origin}/join?code=${group.invite_code}`
 
-    const shareData = {
-      title: `Únete a ${group.name}`,
-      text: `¡Te han invitado al intercambio de regalos "${group.name}"!`,
-      url: inviteUrl,
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      setCopied(true)
+      toast.success('Link copiado al portapapeles')
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = inviteUrl
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-9999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopied(true)
+      toast.success('Link copiado al portapapeles')
+      setTimeout(() => setCopied(false), 2000)
     }
-
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData)
-        return
-      } catch (err) {
-        if ((err as Error).name === 'AbortError') return
-      }
-    }
-
-    await navigator.clipboard.writeText(inviteUrl)
-    setCopied(true)
-    toast.success("Link copiado al portapapeles")
-    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleOpenEdit = () => {
     if (group) {
       setEditName(group.name)
-      setEditBudget(group.budget?.toString() || "")
-      setEditCurrency(group.currency || "CLP")
-      setEditDate(group.exchange_date || "")
+      setEditBudget(group.budget?.toString() || '')
+      setEditCurrency(group.currency || 'CLP')
+      setEditDate(group.exchange_date || '')
       setShowEditDialog(true)
     }
   }
@@ -302,15 +319,15 @@ export default function GroupPage() {
       name: editName,
       budget: editBudget ? parseFloat(editBudget) : null,
       currency: editCurrency,
-      exchange_date: editDate || null
+      exchange_date: editDate || null,
     })
 
     if (result.success) {
-      toast.success("Grupo actualizado")
+      toast.success('Grupo actualizado')
       setShowEditDialog(false)
       await fetchGroupData()
     } else {
-      toast.error(result.error || "Error al actualizar")
+      toast.error(result.error || 'Error al actualizar')
     }
 
     setIsSaving(false)
@@ -323,10 +340,10 @@ export default function GroupPage() {
     const result = await deleteGroup(group.id)
 
     if (result.success) {
-      toast.success("Grupo eliminado")
-      router.push("/dashboard")
+      toast.success('Grupo eliminado')
+      router.push('/dashboard')
     } else {
-      toast.error(result.error || "Error al eliminar")
+      toast.error(result.error || 'Error al eliminar')
       setIsDeleting(false)
     }
   }
@@ -338,10 +355,10 @@ export default function GroupPage() {
     const result = await leaveGroup(group.id)
 
     if (result.success) {
-      toast.success("Has abandonado el grupo")
-      router.push("/dashboard")
+      toast.success('Has abandonado el grupo')
+      router.push('/dashboard')
     } else {
-      toast.error(result.error || "Error al abandonar")
+      toast.error(result.error || 'Error al abandonar')
       setIsLeaving(false)
     }
   }
@@ -355,7 +372,7 @@ export default function GroupPage() {
     if (result.success) {
       setActivities(result.activities as typeof activities)
     } else {
-      toast.error(result.error || "Error al cargar actividades")
+      toast.error(result.error || 'Error al cargar actividades')
     }
 
     setIsLoadingActivities(false)
@@ -367,10 +384,10 @@ export default function GroupPage() {
     const result = await removeMember(groupId, memberId)
 
     if (result.success) {
-      toast.success("Miembro eliminado")
+      toast.success('Miembro eliminado')
       await fetchGroupData()
     } else {
-      toast.error(result.error || "Error al eliminar miembro")
+      toast.error(result.error || 'Error al eliminar miembro')
     }
 
     setRemovingMemberId(null)
@@ -382,7 +399,7 @@ export default function GroupPage() {
     confetti({
       particleCount: 100,
       spread: 70,
-      origin: { y: 0.6 }
+      origin: { y: 0.6 },
     })
   }
 
@@ -393,13 +410,13 @@ export default function GroupPage() {
     const result = await resetDraw(group.id)
 
     if (result.success) {
-      toast.success("Sorteo reiniciado")
+      toast.success('Sorteo reiniciado')
       setShowResetDialog(false)
       setShowMatch(false)
       setMatch(null)
       await fetchGroupData()
     } else {
-      toast.error(result.error || "Error al reiniciar el sorteo")
+      toast.error(result.error || 'Error al reiniciar el sorteo')
     }
 
     setIsResetting(false)
@@ -409,7 +426,7 @@ export default function GroupPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         <AppHeader />
-        <main className="container mx-auto px-4 py-8 max-w-5xl">
+        <main className="container mx-auto max-w-5xl px-4 py-8">
           <GroupPageSkeleton />
         </main>
       </div>
@@ -420,14 +437,14 @@ export default function GroupPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         <AppHeader />
-        <main className="container mx-auto px-4 py-8 max-w-md">
-          <div className="bg-white rounded-xl p-8 border border-slate-200 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Error</h2>
-            <p className="text-slate-500 mb-4">{error}</p>
+        <main className="container mx-auto max-w-md px-4 py-8">
+          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
+            <h2 className="mb-2 text-xl font-bold text-slate-900">Error</h2>
+            <p className="mb-4 text-slate-500">{error}</p>
             <Link href="/dashboard">
               <Button variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Volver al dashboard
               </Button>
             </Link>
@@ -443,35 +460,39 @@ export default function GroupPage() {
     <div className="min-h-screen bg-slate-50 pb-12">
       <AppHeader />
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <main className="container mx-auto max-w-5xl px-4 py-8">
         {/* Back Link */}
         <div className="mb-6">
-          <Link href="/dashboard" className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+          <Link
+            href="/dashboard"
+            className="flex items-center text-slate-500 transition-colors hover:text-indigo-600"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a mis grupos
           </Link>
         </div>
 
         {/* Error Banner */}
         {error && (
-          <div className="mb-6 p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
 
         {/* Header */}
         <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-              <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-slate-900">
+              <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-slate-900">
                 {group.name}
                 <Badge
-                  className={group.status === "DRAWN"
-                    ? "bg-emerald-500 hover:bg-emerald-600"
-                    : "bg-amber-500 hover:bg-amber-600"
+                  className={
+                    group.status === 'DRAWN'
+                      ? 'bg-emerald-500 hover:bg-emerald-600'
+                      : 'bg-amber-500 hover:bg-amber-600'
                   }
                 >
-                  {group.status === "DRAWN" ? "Sorteado" : "Planificando"}
+                  {group.status === 'DRAWN' ? 'Sorteado' : 'Planificando'}
                 </Badge>
               </h1>
             </div>
@@ -484,34 +505,26 @@ export default function GroupPage() {
                 onClick={handleShowActivity}
                 title="Ver actividad"
               >
-                <History className="w-4 h-4" />
+                <History className="h-4 w-4" />
               </Button>
 
               {/* Settings/Edit Button - Admin only */}
               {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleOpenEdit}
-                  title="Editar grupo"
-                >
-                  <Settings className="w-4 h-4" />
+                <Button variant="outline" size="icon" onClick={handleOpenEdit} title="Editar grupo">
+                  <Settings className="h-4 w-4" />
                 </Button>
               )}
 
-              {/* Share/Invite Button */}
-              <Button
-                variant="outline"
-                onClick={handleShare}
-              >
+              {/* Copy Invite Link Button */}
+              <Button variant="outline" onClick={handleShare}>
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4 mr-2" />
+                    <Check className="mr-2 h-4 w-4" />
                     ¡Copiado!
                   </>
                 ) : (
                   <>
-                    <Share2 className="w-4 h-4 mr-2" />
+                    <Copy className="mr-2 h-4 w-4" />
                     Invitar
                   </>
                 )}
@@ -523,21 +536,21 @@ export default function GroupPage() {
                   groupId={groupId}
                   members={members}
                   isAdmin={isAdmin}
-                  isDrawn={group.status === "DRAWN"}
+                  isDrawn={group.status === 'DRAWN'}
                 />
               )}
 
               {/* Draw Button - Only for admin in PLANNING */}
-              {isAdmin && group.status === "PLANNING" && members.length >= 3 && (
+              {isAdmin && group.status === 'PLANNING' && members.length >= 3 && (
                 <Button
                   onClick={() => setShowDrawConfirm(true)}
                   disabled={isDrawing}
                   className="bg-indigo-600 hover:bg-indigo-700"
                 >
                   {isDrawing ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <Shuffle className="w-4 h-4 mr-2" />
+                    <Shuffle className="mr-2 h-4 w-4" />
                   )}
                   Sortear
                 </Button>
@@ -546,52 +559,53 @@ export default function GroupPage() {
           </div>
 
           {/* Group Info */}
-          <div className="flex flex-wrap gap-4 md:gap-6 text-sm text-slate-500">
+          <div className="flex flex-wrap gap-4 text-sm text-slate-500 md:gap-6">
             {group.exchange_date && (
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>{new Date(group.exchange_date).toLocaleDateString("es-ES")}</span>
+                <Calendar className="h-4 w-4" />
+                <span>{new Date(group.exchange_date).toLocaleDateString('es-ES')}</span>
               </div>
             )}
             {group.budget && (
               <div className="flex items-center gap-2">
-                <Wallet className="w-4 h-4" />
+                <Wallet className="h-4 w-4" />
                 <span>${group.budget}</span>
               </div>
             )}
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+              <Users className="h-4 w-4" />
               <span>{members.length} participantes</span>
             </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-[2fr,1fr] gap-8">
+        <div className="grid gap-8 lg:grid-cols-[2fr,1fr]">
           {/* Main Content */}
           <div className="space-y-6">
             {/* PLANNING State - Waiting for draw */}
-            {group.status === "PLANNING" && (
+            {group.status === 'PLANNING' && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Ghost className="w-5 h-5 text-indigo-600" />
+                    <Ghost className="h-5 w-5 text-indigo-600" />
                     Esperando el sorteo
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-500 mb-4">
-                    El grupo está en fase de planificación. Una vez que todos se unan, el administrador realizará el sorteo.
+                  <p className="mb-4 text-slate-500">
+                    El grupo está en fase de planificación. Una vez que todos se unan, el
+                    administrador realizará el sorteo.
                   </p>
                   {isAdmin && members.length < 3 && (
-                    <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                       <p className="text-sm text-amber-700">
-                        Necesitas al menos 3 participantes para realizar el sorteo.
-                        Actualmente tienes {members.length}.
+                        Necesitas al menos 3 participantes para realizar el sorteo. Actualmente
+                        tienes {members.length}.
                       </p>
                     </div>
                   )}
                   {isAdmin && members.length >= 3 && (
-                    <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
+                    <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
                       <p className="text-sm text-indigo-700">
                         ¡Ya puedes realizar el sorteo! Haz clic en el botón "Sortear" arriba.
                       </p>
@@ -602,21 +616,21 @@ export default function GroupPage() {
             )}
 
             {/* DRAWN State - Show match reveal card */}
-            {group.status === "DRAWN" && match && (
+            {group.status === 'DRAWN' && match && (
               <Card className="border-indigo-200 bg-gradient-to-br from-white to-indigo-50/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Gift className="w-5 h-5 text-indigo-600" />
+                    <Gift className="h-5 w-5 text-indigo-600" />
                     Tu Amigo Secreto
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {!showMatch ? (
-                    <div className="text-center py-8">
-                      <div className="inline-flex p-4 rounded-full bg-indigo-100 mb-4">
-                        <Ghost className="w-12 h-12 text-indigo-600" />
+                    <div className="py-8 text-center">
+                      <div className="mb-4 inline-flex rounded-full bg-indigo-100 p-4">
+                        <Ghost className="h-12 w-12 text-indigo-600" />
                       </div>
-                      <p className="text-slate-500 mb-4">
+                      <p className="mb-4 text-slate-500">
                         Tu objetivo ha sido asignado. ¿Listo para descubrirlo?
                       </p>
                       <Button
@@ -624,43 +638,44 @@ export default function GroupPage() {
                         onClick={handleRevealMatch}
                         className="bg-indigo-600 hover:bg-indigo-700"
                       >
-                        <Eye className="w-4 h-4 mr-2" />
+                        <Eye className="mr-2 h-4 w-4" />
                         Revelar Amigo Secreto
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="animate-in fade-in zoom-in-95 space-y-4 duration-500">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-14 w-14 border-2 border-indigo-200">
-                            <AvatarImage src={match.receiver.avatar_url || "/placeholder.svg"} />
-                            <AvatarFallback className="bg-indigo-100 text-indigo-600 text-lg">
-                              {match.receiver.full_name?.charAt(0) || "?"}
+                            <AvatarImage src={match.receiver.avatar_url || '/placeholder.svg'} />
+                            <AvatarFallback className="bg-indigo-100 text-lg text-indigo-600">
+                              {match.receiver.full_name?.charAt(0) || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-bold text-lg text-slate-900">
+                            <p className="text-lg font-bold text-slate-900">
                               {match.receiver.full_name || match.receiver.email}
                             </p>
                             <p className="text-sm text-slate-500">{match.receiver.email}</p>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowMatch(false)}
-                        >
-                          <EyeOff className="w-4 h-4" />
+                        <Button variant="ghost" size="sm" onClick={() => setShowMatch(false)}>
+                          <EyeOff className="h-4 w-4" />
                         </Button>
                       </div>
 
                       {match.receiver_wishlist.length > 0 && (
-                        <div className="mt-4 p-4 rounded-lg bg-white border border-slate-200">
-                          <p className="text-sm font-medium text-slate-700 mb-3">Lista de deseos:</p>
+                        <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+                          <p className="mb-3 text-sm font-medium text-slate-700">
+                            Lista de deseos:
+                          </p>
                           <ul className="space-y-2">
                             {match.receiver_wishlist.map((item, index) => (
-                              <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
-                                <Gift className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
+                              <li
+                                key={index}
+                                className="flex items-start gap-2 text-sm text-slate-600"
+                              >
+                                <Gift className="mt-0.5 h-4 w-4 shrink-0 text-indigo-400" />
                                 <span className="flex-1">
                                   {item.description}
                                   {item.url && (
@@ -668,7 +683,7 @@ export default function GroupPage() {
                                       href={item.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="ml-2 text-indigo-600 hover:underline text-xs"
+                                      className="ml-2 text-xs text-indigo-600 hover:underline"
                                       title={item.url}
                                     >
                                       ({new URL(item.url).hostname.replace('www.', '')}...)
@@ -693,15 +708,15 @@ export default function GroupPage() {
             )}
 
             {/* Reset Draw Button - Admin only when DRAWN */}
-            {isAdmin && group.status === "DRAWN" && (
+            {isAdmin && group.status === 'DRAWN' && (
               <div className="flex justify-end">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowResetDialog(true)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  className="text-red-500 hover:bg-red-50 hover:text-red-600"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
+                  <RotateCcw className="mr-2 h-4 w-4" />
                   Reiniciar Sorteo
                 </Button>
               </div>
@@ -745,56 +760,66 @@ export default function GroupPage() {
                   {members.map((member, index) => (
                     <div
                       key={member.id}
-                      className="flex items-center justify-between animate-in fade-in slide-in-from-left-2 duration-300"
+                      className="animate-in fade-in slide-in-from-left-2 flex items-center justify-between duration-300"
                       style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
                     >
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 border border-slate-200">
-                          <AvatarImage src={member.profile.avatar_url || "/placeholder.svg"} />
-                          <AvatarFallback className="bg-slate-100 text-slate-600 text-xs">
-                            {member.profile.full_name?.charAt(0) || "?"}
+                          <AvatarImage src={member.profile.avatar_url || '/placeholder.svg'} />
+                          <AvatarFallback className="bg-slate-100 text-xs text-slate-600">
+                            {member.profile.full_name?.charAt(0) || '?'}
                           </AvatarFallback>
                         </Avatar>
-                        <span className={
-                          member.user_id === currentUserId
-                            ? "font-medium text-indigo-600 text-sm"
-                            : "text-sm text-slate-700"
-                        }>
-                          {member.user_id === currentUserId ? "Tú" : member.profile.full_name || member.profile.email}
+                        <span
+                          className={
+                            member.user_id === currentUserId
+                              ? 'text-sm font-medium text-indigo-600'
+                              : 'text-sm text-slate-700'
+                          }
+                        >
+                          {member.user_id === currentUserId
+                            ? 'Tú'
+                            : member.profile.full_name || member.profile.email}
                         </span>
-                        {member.is_admin && (
-                          <Ghost className="w-3 h-3 text-indigo-400" />
-                        )}
+                        {member.is_admin && <Ghost className="h-3 w-3 text-indigo-400" />}
                       </div>
 
                       <div className="flex items-center gap-1">
                         {member.wishlist.length > 0 ? (
-                          <div className="text-emerald-500 bg-emerald-50 p-1.5 rounded-full" title="Lista lista">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          <div
+                            className="rounded-full bg-emerald-50 p-1.5 text-emerald-500"
+                            title="Lista lista"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
                           </div>
                         ) : (
-                          <div className="text-slate-400 bg-slate-100 p-1.5 rounded-full" title="Sin lista">
-                            <Clock className="w-3.5 h-3.5" />
+                          <div
+                            className="rounded-full bg-slate-100 p-1.5 text-slate-400"
+                            title="Sin lista"
+                          >
+                            <Clock className="h-3.5 w-3.5" />
                           </div>
                         )}
 
                         {/* Remove button - admin only, planning state, not self */}
-                        {isAdmin && group.status === "PLANNING" && member.user_id !== currentUserId && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveMember(member.id)}
-                            disabled={removingMemberId === member.id}
-                            className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
-                            title="Eliminar miembro"
-                          >
-                            {removingMemberId === member.id ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <UserMinus className="w-3 h-3" />
-                            )}
-                          </Button>
-                        )}
+                        {isAdmin &&
+                          group.status === 'PLANNING' &&
+                          member.user_id !== currentUserId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveMember(member.id)}
+                              disabled={removingMemberId === member.id}
+                              className="h-6 w-6 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                              title="Eliminar miembro"
+                            >
+                              {removingMemberId === member.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <UserMinus className="h-3 w-3" />
+                              )}
+                            </Button>
+                          )}
                       </div>
                     </div>
                   ))}
@@ -802,34 +827,30 @@ export default function GroupPage() {
 
                 <Separator className="my-4" />
 
-                <Button
-                  variant="outline"
-                  onClick={handleShare}
-                  className="w-full text-xs"
-                >
+                <Button variant="outline" onClick={handleShare} className="w-full text-xs">
                   {copied ? (
                     <>
-                      <Check className="w-3 h-3 mr-2" />
+                      <Check className="mr-2 h-3 w-3" />
                       ¡Copiado!
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3 h-3 mr-2" />
+                      <Copy className="mr-2 h-3 w-3" />
                       Copiar link de invitación
                     </>
                   )}
                 </Button>
 
                 {/* Leave button for non-admin members */}
-                {!isAdmin && group.status === "PLANNING" && (
+                {!isAdmin && group.status === 'PLANNING' && (
                   <>
                     <Separator className="my-3" />
                     <Button
                       variant="ghost"
                       onClick={() => setShowLeaveDialog(true)}
-                      className="w-full text-xs text-slate-500 hover:text-red-600 hover:bg-red-50"
+                      className="w-full text-xs text-slate-500 hover:bg-red-50 hover:text-red-600"
                     >
-                      <LogOut className="w-3 h-3 mr-2" />
+                      <LogOut className="mr-2 h-3 w-3" />
                       Abandonar grupo
                     </Button>
                   </>
@@ -837,8 +858,8 @@ export default function GroupPage() {
               </CardContent>
             </Card>
 
-            <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-100">
-              <h4 className="font-medium text-sm text-indigo-700 mb-1">Consejo</h4>
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <h4 className="mb-1 text-sm font-medium text-indigo-700">Consejo</h4>
               <p className="text-xs text-indigo-600/80">
                 Comparte el link de invitación por WhatsApp o email para que se unan más amigos.
               </p>
@@ -852,13 +873,13 @@ export default function GroupPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Shuffle className="w-5 h-5 text-indigo-600" />
+              <Shuffle className="h-5 w-5 text-indigo-600" />
               Confirmar sorteo
             </DialogTitle>
             <DialogDescription className="pt-2" asChild>
               <div>
                 Esta acción es <strong>irreversible</strong>. Una vez realizado el sorteo:
-                <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
                   <li>Cada participante recibirá su Amigo Secreto</li>
                   <li>No podrás agregar más participantes</li>
                   <li>No podrás volver a sortear</li>
@@ -867,17 +888,11 @@ export default function GroupPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowDrawConfirm(false)}
-            >
+            <Button variant="outline" onClick={() => setShowDrawConfirm(false)}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleDraw}
-              className="bg-indigo-600 hover:bg-indigo-700"
-            >
-              <Shuffle className="w-4 h-4 mr-2" />
+            <Button onClick={handleDraw} className="bg-indigo-600 hover:bg-indigo-700">
+              <Shuffle className="mr-2 h-4 w-4" />
               Confirmar sorteo
             </Button>
           </DialogFooter>
@@ -889,7 +904,7 @@ export default function GroupPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Pencil className="w-5 h-5 text-indigo-600" />
+              <Pencil className="h-5 w-5 text-indigo-600" />
               Editar grupo
             </DialogTitle>
           </DialogHeader>
@@ -908,7 +923,7 @@ export default function GroupPage() {
                 <select
                   value={editCurrency}
                   onChange={(e) => setEditCurrency(e.target.value)}
-                  className="h-11 px-3 rounded-md border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="h-11 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="CLP">CLP ($)</option>
                   <option value="USD">USD ($)</option>
@@ -931,11 +946,7 @@ export default function GroupPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Fecha del evento</label>
-              <Input
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-              />
+              <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -947,13 +958,10 @@ export default function GroupPage() {
               }}
               className="sm:mr-auto"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Eliminar grupo
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowEditDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
               Cancelar
             </Button>
             <Button
@@ -961,7 +969,7 @@ export default function GroupPage() {
               disabled={isSaving || !editName.trim()}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Guardar'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -972,14 +980,15 @@ export default function GroupPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="h-5 w-5" />
               Eliminar grupo
             </DialogTitle>
             <DialogDescription className="pt-2">
               ¿Estás seguro de que quieres eliminar <strong>{group?.name}</strong>?
-              <br /><br />
+              <br />
+              <br />
               Esta acción es <strong>permanente</strong> y eliminará:
-              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+              <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
                 <li>Todos los miembros del grupo</li>
                 <li>El historial de actividades</li>
                 <li>Los resultados del sorteo (si aplica)</li>
@@ -987,18 +996,15 @@ export default function GroupPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
               Eliminar
             </Button>
           </DialogFooter>
@@ -1010,28 +1016,26 @@ export default function GroupPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <LogOut className="w-5 h-5 text-amber-600" />
+              <LogOut className="h-5 w-5 text-amber-600" />
               Abandonar grupo
             </DialogTitle>
             <DialogDescription className="pt-2">
               ¿Estás seguro de que quieres abandonar <strong>{group?.name}</strong>?
-              <br /><br />
+              <br />
+              <br />
               Perderás acceso al grupo y no podrás ver tu Amigo Secreto asignado.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowLeaveDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowLeaveDialog(false)}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleLeave}
-              disabled={isLeaving}
-            >
-              {isLeaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
+            <Button variant="destructive" onClick={handleLeave} disabled={isLeaving}>
+              {isLeaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="mr-2 h-4 w-4" />
+              )}
               Abandonar
             </Button>
           </DialogFooter>
@@ -1043,30 +1047,30 @@ export default function GroupPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="w-5 h-5" />
+              <AlertTriangle className="h-5 w-5" />
               Reiniciar Sorteo
             </DialogTitle>
             <DialogDescription className="pt-2">
-              <strong>Advertencia:</strong> Esto borrará las asignaciones actuales y tendrás que sortear de nuevo.
-              <br /><br />
+              <strong>Advertencia:</strong> Esto borrará las asignaciones actuales y tendrás que
+              sortear de nuevo.
+              <br />
+              <br />
               Todos los participantes perderán la información de a quién les tocó regalar.
-              <br /><br />
+              <br />
+              <br />
               ¿Estás seguro de que deseas continuar?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowResetDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowResetDialog(false)}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleResetDraw}
-              disabled={isResetting}
-            >
-              {isResetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+            <Button variant="destructive" onClick={handleResetDraw} disabled={isResetting}>
+              {isResetting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RotateCcw className="mr-2 h-4 w-4" />
+              )}
               Reiniciar
             </Button>
           </DialogFooter>
@@ -1075,40 +1079,40 @@ export default function GroupPage() {
 
       {/* Activity Dialog */}
       <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
-        <DialogContent className="max-w-md max-h-[80vh]">
+        <DialogContent className="max-h-[80vh] max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <History className="w-5 h-5 text-indigo-600" />
+              <History className="h-5 w-5 text-indigo-600" />
               Actividad del grupo
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[50vh] -mx-6 px-6">
+          <div className="-mx-6 max-h-[50vh] overflow-y-auto px-6">
             {isLoadingActivities ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
               </div>
             ) : activities.length === 0 ? (
-              <p className="text-center text-slate-500 py-8">No hay actividades registradas</p>
+              <p className="py-8 text-center text-slate-500">No hay actividades registradas</p>
             ) : (
               <div className="space-y-3">
                 {activities.map((activity) => (
                   <div key={activity.id} className="flex gap-3 text-sm">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={activity.profiles?.avatar_url || undefined} />
                         <AvatarFallback className="text-xs">
-                          {activity.profiles?.full_name?.charAt(0) || "?"}
+                          {activity.profiles?.full_name?.charAt(0) || '?'}
                         </AvatarFallback>
                       </Avatar>
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-slate-700">{activity.message}</p>
                       <p className="text-xs text-slate-400">
-                        {new Date(activity.created_at).toLocaleDateString("es-ES", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit"
+                        {new Date(activity.created_at).toLocaleDateString('es-ES', {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </p>
                     </div>
