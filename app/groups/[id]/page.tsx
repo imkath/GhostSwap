@@ -144,6 +144,39 @@ export default function GroupPage() {
     fetchGroupData()
   }, [groupId])
 
+  // Real-time subscription to group changes
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Subscribe to changes in the group's status
+    const channel = supabase
+      .channel(`group-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'groups',
+          filter: `id=eq.${groupId}`,
+        },
+        (payload) => {
+          // When group is updated (e.g., status changed to DRAWN), refresh data
+          const newGroup = payload.new as Group
+          if (newGroup.status !== group?.status) {
+            fetchGroupData()
+            if (newGroup.status === 'DRAWN') {
+              toast.success('¡El sorteo ha sido realizado!')
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [groupId, group?.status])
+
   const fetchGroupData = async () => {
     const supabase = createClient()
 
