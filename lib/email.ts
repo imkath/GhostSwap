@@ -15,7 +15,7 @@ export async function sendDrawNotification({
   groupName,
   groupId,
 }: DrawNotificationParams) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ghostswap-phi.vercel.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ghostswap.kthcsk.me'
   const groupUrl = `${appUrl}/groups/${groupId}`
 
   try {

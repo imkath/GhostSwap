@@ -1,17 +1,17 @@
-import type React from "react"
-import type { Metadata, Viewport } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
-import { Toaster } from "@/components/ui/sonner"
-import "./globals.css"
+import type React from 'react'
+import type { Metadata, Viewport } from 'next'
+import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Toaster } from '@/components/ui/sonner'
+import './globals.css'
 
 const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans"
+  subsets: ['latin'],
+  variable: '--font-sans',
 })
 
 const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono"
+  subsets: ['latin'],
+  variable: '--font-mono',
 })
 
 export const viewport: Viewport = {
@@ -22,12 +22,13 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ghostswap-phi.vercel.app'),
+  metadataBase: new URL('https://ghostswap.kthcsk.me'),
   title: {
     default: 'GhostSwap - Organiza tu Amigo Secreto Online Gratis',
-    template: '%s | GhostSwap'
+    template: '%s | GhostSwap',
   },
-  description: 'Organiza tu Amigo Secreto o intercambio de regalos online gratis con GhostSwap. Sorteos automáticos, listas de deseos y compartir por WhatsApp. La mejor app para Secret Santa en español.',
+  description:
+    'Organiza tu Amigo Secreto o intercambio de regalos online gratis con GhostSwap. Sorteos automáticos, listas de deseos y compartir por WhatsApp. La mejor app para Secret Santa en español.',
   keywords: [
     'amigo secreto',
     'amigo secreto online',
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
     'intercambio navideño',
     'sorteo de regalos',
     'organizar amigo secreto',
-    'app amigo secreto gratis'
+    'app amigo secreto gratis',
   ],
   authors: [{ name: 'GhostSwap' }],
   creator: 'GhostSwap',
@@ -59,10 +60,11 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_ES',
-    url: 'https://ghostswap-phi.vercel.app',
+    url: 'https://ghostswap.kthcsk.me',
     siteName: 'GhostSwap',
     title: 'GhostSwap - Organiza tu Amigo Secreto Online Gratis',
-    description: 'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos, listas de deseos y comparte por WhatsApp.',
+    description:
+      'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos, listas de deseos y comparte por WhatsApp.',
     images: [
       {
         url: '/api/og',
@@ -75,14 +77,15 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'GhostSwap - Organiza tu Amigo Secreto Online Gratis',
-    description: 'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos y listas de deseos.',
+    description:
+      'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos y listas de deseos.',
     images: ['/api/og'],
     creator: '@ghostswap',
   },
   alternates: {
-    canonical: 'https://ghostswap-phi.vercel.app',
+    canonical: 'https://ghostswap.kthcsk.me',
     languages: {
-      'es': 'https://ghostswap-phi.vercel.app',
+      es: 'https://ghostswap.kthcsk.me',
     },
   },
   category: 'technology',
@@ -103,7 +106,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} bg-background text-foreground min-h-screen font-sans antialiased`}
+      >
         {children}
         <Toaster position="top-center" richColors />
       </body>
