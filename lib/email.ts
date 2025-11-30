@@ -1,12 +1,32 @@
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import nodemailer from 'nodemailer'
 
 interface DrawNotificationParams {
   to: string
   recipientName: string
   groupName: string
   groupId: string
+}
+
+// Create Brevo SMTP transporter
+function createTransporter() {
+  const user = process.env.BREVO_SMTP_USER
+  const pass = process.env.BREVO_SMTP_KEY
+
+  if (!user || !pass) {
+    throw new Error(
+      'Brevo SMTP credentials not configured. Set BREVO_SMTP_USER and BREVO_SMTP_KEY in .env'
+    )
+  }
+
+  return nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user,
+      pass,
+    },
+  })
 }
 
 export async function sendDrawNotification({
@@ -19,19 +39,17 @@ export async function sendDrawNotification({
   const groupUrl = `${appUrl}/groups/${groupId}`
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'GhostSwap <onboarding@resend.dev>',
+    const transporter = createTransporter()
+
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_FROM || 'GhostSwap <hello@kthcsk.me>',
       to,
       subject: `${groupName} - ¡El sorteo ya se realizó!`,
       html: getEmailTemplate({ recipientName, groupName, groupUrl }),
     })
 
-    if (error) {
-      console.error('Error sending email:', error)
-      return { success: false, error }
-    }
-
-    return { success: true, data }
+    console.log('Email sent:', info.messageId)
+    return { success: true, data: { id: info.messageId } }
   } catch (error) {
     console.error('Error sending email:', error)
     return { success: false, error }
@@ -63,12 +81,7 @@ function getEmailTemplate({ recipientName, groupName, groupUrl }: EmailTemplateP
           <tr>
             <td align="center" style="padding-bottom: 32px;">
               <div style="display: inline-flex; align-items: center; gap: 8px;">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1.5 4.5 3.5 5.5-.5.5-1 1.5-1 2.5 0 1.5 1 2.5 2 3v1c0 1.1.9 2 2 2s2-.9 2-2v-1c1-.5 2-1.5 2-3 0-1-.5-2-1-2.5 2-1 3.5-3 3.5-5.5 0-3.5-2.5-6-6-6z" fill="#4f46e5"/>
-                  <circle cx="9" cy="8" r="1.5" fill="white"/>
-                  <circle cx="15" cy="8" r="1.5" fill="white"/>
-                </svg>
-                <span style="font-size: 24px; font-weight: 700; color: #0f172a;">GhostSwap</span>
+                <span style="font-size: 24px; font-weight: 700; color: #0f172a;">👻 GhostSwap</span>
               </div>
             </td>
           </tr>
@@ -175,8 +188,10 @@ export async function sendDrawNotifications(
     )
   )
 
-  const successful = results.filter((r) => r.status === 'fulfilled').length
-  const failed = results.filter((r) => r.status === 'rejected').length
+  const successful = results.filter(
+    (r) => r.status === 'fulfilled' && (r.value as { success: boolean }).success
+  ).length
+  const failed = results.length - successful
 
   console.log(`Sent ${successful} emails, ${failed} failed for group ${groupId}`)
 

@@ -6,6 +6,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-77%25-yellow)](https://github.com/imkath/GhostSwap)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com/)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-orange)](https://workers.cloudflare.com/)
 
 ---
 
@@ -74,10 +75,16 @@
 ### Backend
 
 - **Database:** Supabase (PostgreSQL)
-- **Auth:** Supabase Auth
-- **Email:** Resend
+- **Auth:** Supabase Auth (Google OAuth + Email)
+- **Email:** Brevo SMTP (Nodemailer)
 - **API:** Next.js Server Actions
 - **Validation:** Zod
+
+### Deployment
+
+- **Hosting:** Cloudflare Workers
+- **Build:** OpenNext for Cloudflare
+- **CLI:** Wrangler
 
 ### Testing
 
@@ -91,9 +98,10 @@
 
 ### Prerequisites
 
-- Node.js 18+
-- npm o yarn
+- Node.js 22+ (ver `.nvmrc`)
+- npm
 - Cuenta de Supabase
+- Cuenta de Cloudflare (para deploy)
 
 ### 1. Clonar el repositorio
 
@@ -119,7 +127,11 @@ Edita `.env.local` y agrega:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=tu-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
-RESEND_API_KEY=tu-resend-api-key  # Opcional, para notificaciones email
+
+# Email (Brevo SMTP) - Opcional, para notificaciones
+BREVO_SMTP_USER=tu-smtp-user@smtp-brevo.com
+BREVO_SMTP_KEY=tu-smtp-key
+EMAIL_FROM=TuApp <tu-email@dominio.com>
 ```
 
 ### 4. Configurar la base de datos
@@ -136,7 +148,30 @@ RESEND_API_KEY=tu-resend-api-key  # Opcional, para notificaciones email
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) 🎉
+Abre [http://localhost:3000](http://localhost:3000)
+
+---
+
+## ☁️ Deploy a Cloudflare Workers
+
+```bash
+# Build para Cloudflare
+npm run build:cloudflare
+
+# Preview local
+npm run preview
+
+# Deploy a producción
+npm run deploy
+```
+
+### Configurar secrets en Cloudflare
+
+```bash
+npx wrangler secret put BREVO_SMTP_USER
+npx wrangler secret put BREVO_SMTP_KEY
+npx wrangler secret put EMAIL_FROM
+```
 
 ---
 
@@ -199,12 +234,15 @@ ghostswap/
 ├── lib/                   # Utilidades
 │   ├── __tests__/        # Tests
 │   ├── derangement.ts    # Algoritmo de sorteo
+│   ├── email.ts          # Envío de emails (Brevo SMTP)
 │   ├── validations.ts    # Schemas Zod
-│   └── errors.ts         # Error handling
+│   └── ...
 ├── hooks/                 # Custom hooks
 ├── supabase/             # Database
 │   ├── schema.sql        # Schema completo
 │   └── migrations/       # Migraciones
+├── wrangler.jsonc         # Configuración Cloudflare Workers
+├── open-next.config.ts    # Configuración OpenNext
 └── public/               # Assets estáticos
 ```
 
