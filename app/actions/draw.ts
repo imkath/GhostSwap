@@ -21,7 +21,10 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError || !user) {
     return { success: false, error: 'No autenticado' }
@@ -61,7 +64,7 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
   }
 
   // Extract user IDs
-  const participantIds = members.map(m => m.user_id)
+  const participantIds = members.map((m) => m.user_id)
 
   // Get exclusions (gifting restrictions)
   const { data: exclusionsData } = await supabase
@@ -86,7 +89,8 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
   if (!receivers) {
     return {
       success: false,
-      error: 'No se pudo generar un sorteo válido con las restricciones actuales. Por favor, revisa las exclusiones configuradas.'
+      error:
+        'No se pudo generar un sorteo válido con las restricciones actuales. Por favor, revisa las exclusiones configuradas.',
     }
   }
 
@@ -94,13 +98,11 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
   const matches = participantIds.map((giverId, index) => ({
     group_id: groupId,
     giver_id: giverId,
-    receiver_id: receivers[index]
+    receiver_id: receivers[index],
   }))
 
   // Insert matches
-  const { error: matchError } = await supabase
-    .from('matches')
-    .insert(matches)
+  const { error: matchError } = await supabase.from('matches').insert(matches)
 
   if (matchError) {
     console.error('Error inserting matches:', matchError)
@@ -118,16 +120,14 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
   }
 
   // Log activity
-  await supabase
-    .from('activities')
-    .insert({
-      group_id: groupId,
-      user_id: user.id,
-      type: 'DRAW',
-      message: `El sorteo de "${group.name}" ha sido realizado. ¡Revisa quién te tocó!`
-    })
+  await supabase.from('activities').insert({
+    group_id: groupId,
+    user_id: user.id,
+    type: 'DRAW',
+    message: `El sorteo de "${group.name}" ha sido realizado. ¡Revisa quién te tocó!`,
+  })
 
-  // Send email notifications to all participants (don't await, run in background)
+  // Send email notifications to all participants
   const participants = members
     .map((m) => {
       const profile = m.profiles as unknown as { full_name: string | null; email: string } | null
@@ -139,10 +139,13 @@ export async function drawNames(groupId: string): Promise<DrawResult> {
     })
     .filter((p): p is { email: string; name: string } => p !== null)
 
-  // Fire and forget - don't block the response
-  sendDrawNotifications(participants, group.name, groupId).catch((err) => {
+  // Send notifications and wait for completion (required for Cloudflare Workers)
+  try {
+    const emailResult = await sendDrawNotifications(participants, group.name, groupId)
+    console.log(`Draw notifications: ${emailResult.successful} sent, ${emailResult.failed} failed`)
+  } catch (err) {
     console.error('Error sending draw notifications:', err)
-  })
+  }
 
   revalidatePath(`/groups/${groupId}`)
 
@@ -159,23 +162,21 @@ export async function resetDraw(groupId: string): Promise<DrawResult> {
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError || !user) {
     return { success: false, error: 'No autenticado' }
   }
 
   // Get group name for activity log
-  const { data: group } = await supabase
-    .from('groups')
-    .select('name')
-    .eq('id', groupId)
-    .single()
+  const { data: group } = await supabase.from('groups').select('name').eq('id', groupId).single()
 
   // Use secure database function to reset draw
   // This bypasses RLS to ensure all matches are deleted
-  const { error: resetError } = await supabase
-    .rpc('reset_group_draw', { p_group_id: groupId })
+  const { error: resetError } = await supabase.rpc('reset_group_draw', { p_group_id: groupId })
 
   if (resetError) {
     console.error('Error resetting draw:', resetError)
@@ -183,14 +184,12 @@ export async function resetDraw(groupId: string): Promise<DrawResult> {
   }
 
   // Log activity
-  await supabase
-    .from('activities')
-    .insert({
-      group_id: groupId,
-      user_id: user.id,
-      type: 'DRAW_RESET',
-      message: `El sorteo de "${group?.name || 'grupo'}" ha sido reiniciado`
-    })
+  await supabase.from('activities').insert({
+    group_id: groupId,
+    user_id: user.id,
+    type: 'DRAW_RESET',
+    message: `El sorteo de "${group?.name || 'grupo'}" ha sido reiniciado`,
+  })
 
   revalidatePath(`/groups/${groupId}`)
 
