@@ -33,11 +33,3 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          secrets: |
-            BREVO_SMTP_USER
-            BREVO_SMTP_KEY
-            EMAIL_FROM
-        env:
-          BREVO_SMTP_USER: ${{ secrets.BREVO_SMTP_USER }}
-          BREVO_SMTP_KEY: ${{ secrets.BREVO_SMTP_KEY }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
