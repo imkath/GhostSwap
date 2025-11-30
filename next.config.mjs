@@ -1,7 +1,9 @@
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
+
+initOpenNextCloudflareForDev()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Docker standalone output
-  output: 'standalone',
 
   // Performance optimizations
   poweredByHeader: false,
