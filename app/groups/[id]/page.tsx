@@ -713,13 +713,17 @@ export default function GroupPage() {
                                   {item.description}
                                   {item.url && (
                                     <a
-                                      href={item.url}
+                                      href={
+                                        item.url.startsWith('http')
+                                          ? item.url
+                                          : `https://${item.url}`
+                                      }
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="ml-2 text-xs text-indigo-600 hover:underline"
                                       title={item.url}
                                     >
-                                      ({new URL(item.url).hostname.replace('www.', '')}...)
+                                      (ver link)
                                     </a>
                                   )}
                                 </span>
