@@ -1,13 +1,25 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { LinkIcon, Save, Loader2, Check, ExternalLink, Trash2, Sparkles, Laptop, BookOpen, Shirt, Coffee } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { createClient } from "@/lib/supabase"
-import { toast } from "sonner"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  LinkIcon,
+  Save,
+  Loader2,
+  Check,
+  ExternalLink,
+  Trash2,
+  Sparkles,
+  Laptop,
+  BookOpen,
+  Shirt,
+  Coffee,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 interface WishlistEditorProps {
   groupId: string
@@ -25,62 +37,67 @@ interface LocalWishlistItem {
 // Configuración de cada slot con placeholder, icono y categoría
 const wishlistSlots = [
   {
-    placeholder: "Ej: Unos audífonos bluetooth o accesorios para mi setup...",
+    placeholder: 'Ej: Unos audífonos bluetooth o accesorios para mi setup...',
     icon: Laptop,
-    category: "Tech/Hobby"
+    category: 'Tech/Hobby',
   },
   {
-    placeholder: "Ej: El último libro de Stephen King o una novela gráfica...",
+    placeholder: 'Ej: El último libro de Stephen King o una novela gráfica...',
     icon: BookOpen,
-    category: "Libros/Cultura"
+    category: 'Libros/Cultura',
   },
   {
-    placeholder: "Ej: Una polera negra talla M o calcetines divertidos...",
+    placeholder: 'Ej: Una polera negra talla M o calcetines divertidos...',
     icon: Shirt,
-    category: "Ropa/Estilo"
+    category: 'Ropa/Estilo',
   },
   {
-    placeholder: "Ej: Una planta para mi escritorio o una vela aromática...",
+    placeholder: 'Ej: Una planta para mi escritorio o una vela aromática...',
     icon: Coffee,
-    category: "Decoración/Casa"
+    category: 'Decoración/Casa',
   },
   {
-    placeholder: "Ej: ¡Sorpréndeme! Me gustan los chocolates amargos...",
+    placeholder: 'Ej: ¡Sorpréndeme! Me gustan los chocolates amargos...',
     icon: Sparkles,
-    category: "Comodín"
-  }
+    category: 'Comodín',
+  },
 ]
 
-export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }: WishlistEditorProps) {
+export function WishlistEditor({
+  groupId,
+  memberId,
+  initialItems = [],
+  onSave,
+}: WishlistEditorProps) {
   const [items, setItems] = useState<LocalWishlistItem[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   // Initialize items from props or create empty slots
   useEffect(() => {
     if (initialItems.length > 0) {
       const mappedItems = initialItems.map((item, index) => ({
         id: `item-${index}`,
-        description: item.description || "",
-        url: item.url || ""
+        description: item.description || '',
+        url: item.url || '',
       }))
       // Pad to 5 items
       while (mappedItems.length < 5) {
         mappedItems.push({
           id: `new-${mappedItems.length}`,
-          description: "",
-          url: ""
+          description: '',
+          url: '',
         })
       }
       setItems(mappedItems.slice(0, 5))
     } else {
       setItems([
-        { id: "new-0", description: "", url: "" },
-        { id: "new-1", description: "", url: "" },
-        { id: "new-2", description: "", url: "" },
-        { id: "new-3", description: "", url: "" },
-        { id: "new-4", description: "", url: "" },
+        { id: 'new-0', description: '', url: '' },
+        { id: 'new-1', description: '', url: '' },
+        { id: 'new-2', description: '', url: '' },
+        { id: 'new-3', description: '', url: '' },
+        { id: 'new-4', description: '', url: '' },
       ])
     }
   }, [initialItems])
@@ -90,19 +107,17 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
   }
 
   const handleClearItem = (id: string) => {
-    setItems(items.map((item) =>
-      item.id === id ? { ...item, description: "", url: "" } : item
-    ))
+    setItems(items.map((item) => (item.id === id ? { ...item, description: '', url: '' } : item)))
   }
 
   const handleSave = async () => {
     setIsSaving(true)
-    setError("")
+    setError('')
 
     // Validate: at least check for empty descriptions on items with URLs
-    const invalidItems = items.filter(item => item.url && !item.description.trim())
+    const invalidItems = items.filter((item) => item.url && !item.description.trim())
     if (invalidItems.length > 0) {
-      setError("Los artículos con URL deben tener una descripción")
+      setError('Los artículos con URL deben tener una descripción')
       setIsSaving(false)
       return
     }
@@ -111,10 +126,10 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
       const supabase = createClient()
 
       const wishlistData = items
-        .filter(item => item.description.trim())
-        .map(item => ({
+        .filter((item) => item.description.trim())
+        .map((item) => ({
           description: item.description.trim(),
-          url: item.url.trim() || undefined
+          url: item.url.trim() || undefined,
         }))
 
       const { error: updateError } = await supabase
@@ -128,14 +143,14 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
       }
 
       setLastSaved(new Date())
-      toast.success("Lista de deseos guardada", {
-        icon: <Sparkles className="w-4 h-4" />,
+      toast.success('Lista de deseos guardada', {
+        icon: <Sparkles className="h-4 w-4" />,
       })
       if (onSave) {
         onSave()
       }
     } catch {
-      setError("Error de conexión")
+      setError('Error de conexión')
     } finally {
       setIsSaving(false)
     }
@@ -144,14 +159,20 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
   const isValidUrl = (url?: string) => {
     if (!url || !url.trim()) return false
     try {
-      new URL(url)
+      // Add https:// if missing for validation
+      const urlToCheck = url.startsWith('http') ? url : `https://${url}`
+      new URL(urlToCheck)
       return true
     } catch {
       return false
     }
   }
 
-  const filledItemsCount = items.filter(item => item.description.trim()).length
+  const normalizeUrl = (url: string) => {
+    return url.startsWith('http') ? url : `https://${url}`
+  }
+
+  const filledItemsCount = items.filter((item) => item.description.trim()).length
 
   return (
     <div className="space-y-6">
@@ -163,19 +184,17 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">
-            {filledItemsCount}/5
-          </span>
+          <span className="text-xs text-slate-400">{filledItemsCount}/5</span>
           {lastSaved && (
-            <span className="text-xs text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-full">
-              <Check className="w-3 h-3" /> Guardado
+            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-600">
+              <Check className="h-3 w-3" /> Guardado
             </span>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
           {error}
         </div>
       )}
@@ -188,13 +207,13 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
           return (
             <div
               key={item.id}
-              className="group relative p-4 rounded-xl bg-slate-50 hover:bg-white hover:shadow-md transition-all duration-200"
+              className="group relative rounded-xl bg-slate-50 p-4 transition-all duration-200 hover:bg-white hover:shadow-md"
             >
               <div className="space-y-3">
                 {/* Input principal con icono */}
                 <div className="relative flex items-center gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400 group-hover:text-indigo-500 transition-colors shadow-sm">
-                    <SlotIcon className="w-4 h-4" />
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm transition-colors group-hover:text-indigo-500">
+                    <SlotIcon className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
                     <Label htmlFor={`desc-${item.id}`} className="sr-only">
@@ -204,8 +223,8 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
                       id={`desc-${item.id}`}
                       placeholder={slot.placeholder}
                       value={item.description}
-                      onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
-                      className="bg-white border-slate-200 focus-visible:ring-indigo-500 h-10"
+                      onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                      className="h-10 border-slate-200 bg-white focus-visible:ring-indigo-500"
                     />
                   </div>
                   {(item.description || item.url) && (
@@ -214,9 +233,9 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
                       variant="ghost"
                       size="icon"
                       onClick={() => handleClearItem(item.id)}
-                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
+                      className="h-8 w-8 flex-shrink-0 text-slate-400 hover:bg-red-50 hover:text-red-500"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -230,29 +249,29 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
                     <div className="relative">
                       <LinkIcon
                         className={cn(
-                          "absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors",
-                          isValidUrl(item.url) ? "text-emerald-500" : "text-slate-300",
+                          'absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 transition-colors',
+                          isValidUrl(item.url) ? 'text-emerald-500' : 'text-slate-300'
                         )}
                       />
                       <Input
                         id={`url-${item.id}`}
                         placeholder="Pegar enlace (opcional)"
                         value={item.url}
-                        onChange={(e) => handleItemChange(item.id, "url", e.target.value)}
+                        onChange={(e) => handleItemChange(item.id, 'url', e.target.value)}
                         className={cn(
-                          "pl-9 pr-9 h-8 text-sm bg-white/80 border-slate-200 focus-visible:ring-indigo-500 placeholder:text-slate-400",
+                          'h-8 border-slate-200 bg-white/80 pr-9 pl-9 text-sm placeholder:text-slate-400 focus-visible:ring-indigo-500',
                           isValidUrl(item.url) &&
-                            "border-emerald-500/50 focus-visible:ring-emerald-500/50 bg-emerald-50/30",
+                            'border-emerald-500/50 bg-emerald-50/30 focus-visible:ring-emerald-500/50'
                         )}
                       />
                       {isValidUrl(item.url) && (
                         <a
-                          href={item.url}
+                          href={normalizeUrl(item.url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
+                          className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       )}
                     </div>
@@ -268,16 +287,16 @@ export function WishlistEditor({ groupId, memberId, initialItems = [], onSave }:
         <Button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 sm:w-auto"
         >
           {isSaving ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Guardando...
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="mr-2 h-4 w-4" />
               Guardar Lista
             </>
           )}
