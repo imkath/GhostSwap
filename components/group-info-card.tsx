@@ -1,16 +1,38 @@
 'use client'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { Calendar, Wallet } from 'lucide-react'
+import { Calendar, Wallet, Hash, Copy, Check } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface GroupInfoCardProps {
   budget: number | null
   currency?: string
   exchangeDate: string | null
+  inviteCode?: string
 }
 
-export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupInfoCardProps) {
-  if (!budget && !exchangeDate) return null
+export function GroupInfoCard({
+  budget,
+  currency = 'CLP',
+  exchangeDate,
+  inviteCode,
+}: GroupInfoCardProps) {
+  const [codeCopied, setCodeCopied] = useState(false)
+
+  if (!budget && !exchangeDate && !inviteCode) return null
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return
+    try {
+      await navigator.clipboard.writeText(inviteCode)
+      setCodeCopied(true)
+      toast.success('Código copiado')
+      setTimeout(() => setCodeCopied(false), 2000)
+    } catch {
+      toast.error('Error al copiar')
+    }
+  }
 
   // Parse date string as local date to avoid timezone issues
   // "2024-12-24" should be Dec 24, not Dec 23 due to UTC conversion
@@ -116,6 +138,28 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
                       : `En ${getDaysUntil(exchangeDate)} días`}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Invite Code */}
+          {inviteCode && (
+            <div
+              className="cursor-pointer rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm transition-colors hover:bg-white/80"
+              onClick={handleCopyCode}
+              title="Clic para copiar código"
+            >
+              <div className="mb-2 inline-flex rounded-full bg-indigo-100 p-2.5 text-indigo-600">
+                <Hash className="h-5 w-5" />
+              </div>
+              <p className="flex items-center justify-center gap-1 font-mono text-lg font-bold text-slate-900">
+                {inviteCode}
+                {codeCopied ? (
+                  <Check className="h-4 w-4 text-emerald-500" />
+                ) : (
+                  <Copy className="h-4 w-4 text-slate-400" />
+                )}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">Código de invitación</p>
             </div>
           )}
         </div>
