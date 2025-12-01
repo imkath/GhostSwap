@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, Wallet } from "lucide-react"
+import { Card, CardContent } from '@/components/ui/card'
+import { Calendar, Wallet } from 'lucide-react'
 
 interface GroupInfoCardProps {
   budget: number | null
@@ -12,17 +12,24 @@ interface GroupInfoCardProps {
 export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupInfoCardProps) {
   if (!budget && !exchangeDate) return null
 
+  // Parse date string as local date to avoid timezone issues
+  // "2024-12-24" should be Dec 24, not Dec 23 due to UTC conversion
+  const parseLocalDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  }
+
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("es-ES", {
-      weekday: "long",
-      day: "numeric",
-      month: "long"
+    const date = parseLocalDate(dateString)
+    return date.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
     })
   }
 
   const getDaysUntil = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = parseLocalDate(dateString)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     date.setHours(0, 0, 0, 0)
@@ -34,15 +41,15 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
   const formatCurrency = (amount: number, currencyCode: string) => {
     // Map currency codes to their symbols
     const currencySymbols: Record<string, string> = {
-      'CLP': '$',
-      'USD': 'US$',
-      'EUR': '€',
-      'MXN': 'MX$',
-      'ARS': 'AR$',
-      'COP': 'COL$',
-      'PEN': 'S/',
-      'BRL': 'R$',
-      'GBP': '£'
+      CLP: '$',
+      USD: 'US$',
+      EUR: '€',
+      MXN: 'MX$',
+      ARS: 'AR$',
+      COP: 'COL$',
+      PEN: 'S/',
+      BRL: 'R$',
+      GBP: '£',
     }
 
     const symbol = currencySymbols[currencyCode] || currencyCode
@@ -50,7 +57,7 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
     // Format number with locale-specific separators
     const formattedAmount = amount.toLocaleString('es-ES', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     })
 
     return `${symbol}${formattedAmount}`
@@ -58,15 +65,15 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
 
   const getCurrencyFlag = (currencyCode: string) => {
     const currencyFlags: Record<string, string> = {
-      'CLP': '🇨🇱',
-      'USD': '🇺🇸',
-      'EUR': '🇪🇺',
-      'MXN': '🇲🇽',
-      'ARS': '🇦🇷',
-      'COP': '🇨🇴',
-      'PEN': '🇵🇪',
-      'BRL': '🇧🇷',
-      'GBP': '🇬🇧'
+      CLP: '🇨🇱',
+      USD: '🇺🇸',
+      EUR: '🇪🇺',
+      MXN: '🇲🇽',
+      ARS: '🇦🇷',
+      COP: '🇨🇴',
+      PEN: '🇵🇪',
+      BRL: '🇧🇷',
+      GBP: '🇬🇧',
     }
     return currencyFlags[currencyCode] || '💰'
   }
@@ -77,12 +84,14 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
         <div className="grid grid-cols-2 gap-4">
           {/* Budget */}
           {budget && (
-            <div className="text-center p-4 rounded-xl bg-white/60 backdrop-blur-sm">
-              <div className="inline-flex p-2.5 rounded-full bg-emerald-100 text-emerald-600 mb-2">
-                <Wallet className="w-5 h-5" />
+            <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+              <div className="mb-2 inline-flex rounded-full bg-emerald-100 p-2.5 text-emerald-600">
+                <Wallet className="h-5 w-5" />
               </div>
-              <p className="text-2xl font-bold text-slate-900">{formatCurrency(budget, currency)}</p>
-              <p className="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1">
+              <p className="text-2xl font-bold text-slate-900">
+                {formatCurrency(budget, currency)}
+              </p>
+              <p className="mt-1 flex items-center justify-center gap-1 text-xs text-slate-500">
                 <span>{getCurrencyFlag(currency)}</span>
                 <span>Presupuesto</span>
               </p>
@@ -91,20 +100,20 @@ export function GroupInfoCard({ budget, currency = 'CLP', exchangeDate }: GroupI
 
           {/* Date */}
           {exchangeDate && (
-            <div className="text-center p-4 rounded-xl bg-white/60 backdrop-blur-sm">
-              <div className="inline-flex p-2.5 rounded-full bg-rose-100 text-rose-600 mb-2">
-                <Calendar className="w-5 h-5" />
+            <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+              <div className="mb-2 inline-flex rounded-full bg-rose-100 p-2.5 text-rose-600">
+                <Calendar className="h-5 w-5" />
               </div>
               <p className="text-lg font-bold text-slate-900 capitalize">
                 {formatDate(exchangeDate)}
               </p>
               {getDaysUntil(exchangeDate) >= 0 && (
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="mt-1 text-xs text-slate-500">
                   {getDaysUntil(exchangeDate) === 0
-                    ? "¡Es hoy!"
+                    ? '¡Es hoy!'
                     : getDaysUntil(exchangeDate) === 1
-                    ? "Mañana"
-                    : `En ${getDaysUntil(exchangeDate)} días`}
+                      ? 'Mañana'
+                      : `En ${getDaysUntil(exchangeDate)} días`}
                 </p>
               )}
             </div>
