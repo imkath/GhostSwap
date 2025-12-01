@@ -778,13 +778,12 @@ export default function GroupPage() {
           {/* Sidebar - Participants */}
           <div className="space-y-6">
             {/* Group Info Card */}
-            {(group.budget || group.exchange_date) && (
-              <GroupInfoCard
-                budget={group.budget}
-                currency={group.currency}
-                exchangeDate={group.exchange_date}
-              />
-            )}
+            <GroupInfoCard
+              budget={group.budget}
+              currency={group.currency}
+              exchangeDate={group.exchange_date}
+              inviteCode={group.invite_code}
+            />
 
             <Card>
               <CardHeader>
