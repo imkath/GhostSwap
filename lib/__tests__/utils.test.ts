@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn } from '../utils'
+import { cn, parseLocalDate, formatLocalDate } from '../utils'
 
 describe('cn (class names utility)', () => {
   it('merges simple class names', () => {
@@ -7,7 +7,8 @@ describe('cn (class names utility)', () => {
   })
 
   it('handles conditional classes', () => {
-    expect(cn('foo', false && 'bar', 'baz')).toBe('foo baz')
+    const condition = false
+    expect(cn('foo', condition && 'bar', 'baz')).toBe('foo baz')
   })
 
   it('handles undefined and null', () => {
@@ -32,5 +33,59 @@ describe('cn (class names utility)', () => {
 
   it('handles empty inputs', () => {
     expect(cn()).toBe('')
+  })
+})
+
+describe('parseLocalDate', () => {
+  it('parses YYYY-MM-DD string as local date', () => {
+    const date = parseLocalDate('2024-12-24')
+    expect(date.getFullYear()).toBe(2024)
+    expect(date.getMonth()).toBe(11) // December is month 11
+    expect(date.getDate()).toBe(24)
+  })
+
+  it('parses first day of month correctly', () => {
+    const date = parseLocalDate('2024-01-01')
+    expect(date.getFullYear()).toBe(2024)
+    expect(date.getMonth()).toBe(0) // January is month 0
+    expect(date.getDate()).toBe(1)
+  })
+
+  it('parses last day of year correctly', () => {
+    const date = parseLocalDate('2024-12-31')
+    expect(date.getFullYear()).toBe(2024)
+    expect(date.getMonth()).toBe(11)
+    expect(date.getDate()).toBe(31)
+  })
+
+  it('avoids timezone shift issue that occurs with new Date(string)', () => {
+    // This is the key test: new Date("2024-12-24") interprets as UTC
+    // and can shift to Dec 23 in negative UTC offset timezones
+    const dateString = '2024-12-24'
+    const localDate = parseLocalDate(dateString)
+
+    // The date should always be 24, regardless of timezone
+    expect(localDate.getDate()).toBe(24)
+  })
+})
+
+describe('formatLocalDate', () => {
+  it('formats date string for display in es-ES locale', () => {
+    const formatted = formatLocalDate('2024-12-24')
+    // Should contain "24" as the day
+    expect(formatted).toContain('24')
+  })
+
+  it('formats with custom locale', () => {
+    const formatted = formatLocalDate('2024-12-24', 'en-US')
+    // Should contain "24" as the day
+    expect(formatted).toContain('24')
+  })
+
+  it('preserves correct day without timezone shift', () => {
+    // The formatted output should show day 24, not 23
+    const formatted = formatLocalDate('2024-12-24', 'es-ES')
+    expect(formatted).toContain('24')
+    expect(formatted).not.toContain('23')
   })
 })
