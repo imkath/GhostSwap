@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -15,9 +15,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -35,9 +33,7 @@ export async function middleware(request: NextRequest) {
 
   // Protected routes
   const protectedPaths = ['/dashboard', '/groups']
-  const isProtectedPath = protectedPaths.some(path =>
-    request.nextUrl.pathname.startsWith(path)
-  )
+  const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path))
 
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone()
@@ -49,9 +45,7 @@ export async function middleware(request: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   const authPaths = ['/login', '/register']
-  const isAuthPath = authPaths.some(path =>
-    request.nextUrl.pathname === path
-  )
+  const isAuthPath = authPaths.some((path) => request.nextUrl.pathname === path)
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone()
@@ -63,7 +57,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

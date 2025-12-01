@@ -57,6 +57,7 @@ import { GroupPageSkeleton } from '@/components/skeletons'
 import { GroupInfoCard } from '@/components/group-info-card'
 import { ExclusionsManager } from '@/components/exclusions-manager'
 import { Input } from '@/components/ui/input'
+import { formatLocalDate } from '@/lib/utils'
 import { toast } from 'sonner'
 
 interface Member {
@@ -596,7 +597,7 @@ export default function GroupPage() {
             {group.exchange_date && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>{new Date(group.exchange_date).toLocaleDateString('es-ES')}</span>
+                <span>{formatLocalDate(group.exchange_date)}</span>
               </div>
             )}
             {group.budget && (
@@ -791,6 +792,14 @@ export default function GroupPage() {
                   Participantes
                   <Badge variant="outline">{members.length}</Badge>
                 </CardTitle>
+                <div className="flex items-center gap-4 text-xs text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Lista lista
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-slate-400" /> Sin lista
+                  </span>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
