@@ -8,6 +8,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { formatLocalDate } from '@/lib/utils'
 
 interface GroupPreview {
   id: string
@@ -311,7 +312,7 @@ function JoinGroupContent() {
                 {groupPreview.exchange_date && (
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {new Date(groupPreview.exchange_date).toLocaleDateString('es-ES')}
+                    {formatLocalDate(groupPreview.exchange_date)}
                   </span>
                 )}
               </div>
