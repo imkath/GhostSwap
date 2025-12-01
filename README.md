@@ -155,14 +155,13 @@ Abre [http://localhost:3000](http://localhost:3000)
 ## ☁️ Deploy a Cloudflare Workers
 
 ```bash
-# Build para Cloudflare
-npm run build:cloudflare
+# Build y deploy en un solo comando
+npm run build:cloudflare && npm run deploy
 
-# Preview local
-npm run preview
-
-# Deploy a producción
-npm run deploy
+# O por separado:
+npm run build:cloudflare  # Build para Cloudflare
+npm run preview           # Preview local
+npm run deploy            # Deploy a producción
 ```
 
 ### Configurar secrets en Cloudflare
