@@ -67,7 +67,7 @@ export const metadata: Metadata = {
       'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos, listas de deseos y comparte por WhatsApp.',
     images: [
       {
-        url: '/api/og',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'GhostSwap - Amigo Secreto Online',
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     title: 'GhostSwap - Organiza tu Amigo Secreto Online Gratis',
     description:
       'Organiza tu Amigo Secreto o intercambio de regalos online gratis. Sorteos automáticos y listas de deseos.',
-    images: ['/api/og'],
+    images: ['/og-image.png'],
     creator: '@ghostswap',
   },
   alternates: {
