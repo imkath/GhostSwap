@@ -144,7 +144,7 @@ export function GroupInfoCard({
           {/* Invite Code */}
           {inviteCode && (
             <div
-              className="cursor-pointer rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm transition-colors hover:bg-white/80"
+              className="col-span-2 cursor-pointer rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm transition-colors hover:bg-white/80"
               onClick={handleCopyCode}
               title="Clic para copiar código"
             >
