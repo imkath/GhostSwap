@@ -793,7 +793,7 @@ export default function GroupPage() {
                 </CardTitle>
                 <div className="flex items-center gap-4 text-xs text-slate-500">
                   <span className="flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Lista lista
+                    <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Ha agregado ítems
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3 text-slate-400" /> Sin lista
@@ -833,7 +833,7 @@ export default function GroupPage() {
                         {member.wishlist.length > 0 ? (
                           <div
                             className="rounded-full bg-emerald-50 p-1.5 text-emerald-500"
-                            title="Lista lista"
+                            title="Ha agregado ítems"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
                           </div>
