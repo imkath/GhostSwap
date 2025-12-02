@@ -163,10 +163,10 @@ export default function DashboardPage() {
             <Link key={group.id} href={`/groups/${group.id}`} className="group block">
               <Card className="h-full cursor-pointer border-slate-200 bg-white transition-all hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-100">
                 <CardHeader>
-                  <CardTitle className="flex items-start justify-between gap-4">
-                    <span className="truncate text-xl text-slate-900">{group.name}</span>
+                  <CardTitle className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 text-xl break-words text-slate-900">{group.name}</span>
                     <span
-                      className={`rounded-full border px-2 py-1 text-xs font-medium whitespace-nowrap ${
+                      className={`shrink-0 rounded-full border px-2 py-1 text-xs font-medium ${
                         group.status === 'DRAWN'
                           ? 'border-emerald-100 bg-emerald-50 text-emerald-600'
                           : 'border-amber-100 bg-amber-50 text-amber-600'
