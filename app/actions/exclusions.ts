@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { addExclusionSchema, removeExclusionSchema } from '@/lib/validations'
+import { canAddExclusion, getExclusionLimitsSummary } from '@/lib/exclusion-limits'
 
 interface ExclusionResult {
   success: boolean
@@ -45,7 +46,10 @@ export async function addExclusion(
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError || !user) {
     return { success: false, error: 'No autenticado' }
@@ -81,14 +85,46 @@ export async function addExclusion(
     return { success: false, error: 'Ambos usuarios deben ser miembros del grupo' }
   }
 
-  // Insert exclusion
-  const { error: insertError } = await supabase
+  // Get all members to calculate limits
+  const { data: allMembers, error: allMembersError } = await supabase
+    .from('members')
+    .select('user_id')
+    .eq('group_id', groupId)
+
+  if (allMembersError || !allMembers) {
+    return { success: false, error: 'Error al obtener miembros del grupo' }
+  }
+
+  const participantIds = allMembers.map((m) => m.user_id)
+
+  // Get current exclusions to check limits
+  const { data: currentExclusions, error: exclusionsError } = await supabase
     .from('exclusions')
-    .insert({
-      group_id: groupId,
-      giver_id: giverId,
-      excluded_receiver_id: excludedReceiverId,
-    })
+    .select('giver_id, excluded_receiver_id')
+    .eq('group_id', groupId)
+
+  if (exclusionsError) {
+    return { success: false, error: 'Error al verificar restricciones existentes' }
+  }
+
+  // Check if adding this exclusion would exceed limits
+  const limitCheck = canAddExclusion(
+    giverId,
+    excludedReceiverId,
+    currentExclusions || [],
+    participantIds
+  )
+
+  if (!limitCheck.canAdd) {
+    return { success: false, error: limitCheck.reason || 'Límite de restricciones alcanzado' }
+  }
+
+  // Insert exclusion
+  const { error: insertError } = await supabase.from('exclusions').insert({
+    group_id: groupId,
+    giver_id: giverId,
+    excluded_receiver_id: excludedReceiverId,
+  })
 
   if (insertError) {
     // Handle unique constraint violation
@@ -118,7 +154,10 @@ export async function removeExclusion(exclusionId: string): Promise<ExclusionRes
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError || !user) {
     return { success: false, error: 'No autenticado' }
@@ -146,10 +185,7 @@ export async function removeExclusion(exclusionId: string): Promise<ExclusionRes
   }
 
   // Delete exclusion
-  const { error: deleteError } = await supabase
-    .from('exclusions')
-    .delete()
-    .eq('id', exclusionId)
+  const { error: deleteError } = await supabase.from('exclusions').delete().eq('id', exclusionId)
 
   if (deleteError) {
     console.error('Error deleting exclusion:', deleteError)
@@ -168,7 +204,10 @@ export async function getExclusions(groupId: string): Promise<GetExclusionsResul
   const supabase = await createClient()
 
   // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError || !user) {
     return { success: false, error: 'No autenticado' }
@@ -199,4 +238,49 @@ export async function getExclusions(groupId: string): Promise<GetExclusionsResul
   }
 
   return { success: true, exclusions: exclusions || [] }
+}
+
+/**
+ * Get exclusion limits summary for a group
+ */
+export async function getExclusionLimits(groupId: string): Promise<{
+  success: boolean
+  limits?: { current: number; max: number; remaining: number; maxPerPerson: number }
+  error?: string
+}> {
+  const supabase = await createClient()
+
+  // Get current user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return { success: false, error: 'No autenticado' }
+  }
+
+  // Get member count
+  const { data: members, error: membersError } = await supabase
+    .from('members')
+    .select('user_id')
+    .eq('group_id', groupId)
+
+  if (membersError || !members) {
+    return { success: false, error: 'Error al obtener miembros' }
+  }
+
+  // Get current exclusions
+  const { data: exclusions, error: exclusionsError } = await supabase
+    .from('exclusions')
+    .select('giver_id, excluded_receiver_id')
+    .eq('group_id', groupId)
+
+  if (exclusionsError) {
+    return { success: false, error: 'Error al obtener restricciones' }
+  }
+
+  const limits = getExclusionLimitsSummary(exclusions || [], members.length)
+
+  return { success: true, limits }
 }
