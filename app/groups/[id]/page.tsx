@@ -38,6 +38,7 @@ import {
   UserMinus,
   RotateCcw,
   AlertTriangle,
+  ExternalLink,
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -673,7 +674,7 @@ export default function GroupPage() {
                         className="bg-indigo-600 hover:bg-indigo-700"
                       >
                         <Eye className="mr-2 h-4 w-4" />
-                        Revelar Amigo Secreto
+                        Ver Amigo Secreto y su Lista
                       </Button>
                     </div>
                   ) : (
@@ -721,10 +722,12 @@ export default function GroupPage() {
                                       }
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="ml-2 text-xs text-indigo-600 hover:underline"
+                                      className="ml-2 inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
                                       title={item.url}
+                                      onClick={(e) => e.stopPropagation()}
                                     >
-                                      (ver link)
+                                      <ExternalLink className="h-3 w-3" />
+                                      ver enlace
                                     </a>
                                   )}
                                 </span>
@@ -735,9 +738,12 @@ export default function GroupPage() {
                       )}
 
                       {match.receiver_wishlist.length === 0 && (
-                        <p className="text-sm text-slate-400 italic">
-                          Esta persona no ha agregado artículos a su lista de deseos.
-                        </p>
+                        <div className="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
+                          <Gift className="mx-auto h-8 w-8 text-slate-300" />
+                          <p className="mt-2 text-sm text-slate-500">
+                            Aún no ha agregado artículos a su lista de deseos
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}

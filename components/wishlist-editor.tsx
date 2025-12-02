@@ -269,7 +269,8 @@ export function WishlistEditor({
                           href={normalizeUrl(item.url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
+                          className="absolute top-1/2 right-3 z-10 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>
