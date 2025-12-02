@@ -19,9 +19,15 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Ban, Trash2, UserX, AlertCircle } from 'lucide-react'
-import { addExclusion, removeExclusion, getExclusions } from '@/app/actions/exclusions'
+import { Ban, Trash2, UserX, AlertCircle, Info } from 'lucide-react'
+import {
+  addExclusion,
+  removeExclusion,
+  getExclusions,
+  getExclusionLimits,
+} from '@/app/actions/exclusions'
 import { toast } from 'sonner'
+import { Progress } from '@/components/ui/progress'
 
 interface Member {
   id: string
@@ -48,6 +54,13 @@ interface ExclusionsManagerProps {
   isDrawn: boolean
 }
 
+interface ExclusionLimits {
+  current: number
+  max: number
+  remaining: number
+  maxPerPerson: number
+}
+
 export function ExclusionsManager({ groupId, members, isAdmin, isDrawn }: ExclusionsManagerProps) {
   const [showDialog, setShowDialog] = useState(false)
   const [exclusions, setExclusions] = useState<Exclusion[]>([])
@@ -55,6 +68,7 @@ export function ExclusionsManager({ groupId, members, isAdmin, isDrawn }: Exclus
   const [selectedExcluded, setSelectedExcluded] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
+  const [limits, setLimits] = useState<ExclusionLimits | null>(null)
 
   useEffect(() => {
     if (showDialog) {
@@ -64,11 +78,19 @@ export function ExclusionsManager({ groupId, members, isAdmin, isDrawn }: Exclus
 
   const loadExclusions = async () => {
     setIsLoading(true)
-    const result = await getExclusions(groupId)
-    if (result.success && result.exclusions) {
-      setExclusions(result.exclusions)
+    const [exclusionsResult, limitsResult] = await Promise.all([
+      getExclusions(groupId),
+      getExclusionLimits(groupId),
+    ])
+
+    if (exclusionsResult.success && exclusionsResult.exclusions) {
+      setExclusions(exclusionsResult.exclusions)
     } else {
-      toast.error(result.error || 'Error al cargar restricciones')
+      toast.error(exclusionsResult.error || 'Error al cargar restricciones')
+    }
+
+    if (limitsResult.success && limitsResult.limits) {
+      setLimits(limitsResult.limits)
     }
     setIsLoading(false)
   }
@@ -166,6 +188,28 @@ export function ExclusionsManager({ groupId, members, isAdmin, isDrawn }: Exclus
             </div>
           )}
 
+          {!isDrawn && isAdmin && limits && (
+            <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+              <Info className="h-5 w-5 shrink-0 text-blue-600" />
+              <div className="flex-1">
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="text-blue-900">
+                    {limits.remaining > 0
+                      ? `Puedes agregar ${limits.remaining} restricción${limits.remaining !== 1 ? 'es' : ''} más`
+                      : 'Límite de restricciones alcanzado'}
+                  </span>
+                  <span className="font-medium text-blue-700">
+                    {limits.current}/{limits.max}
+                  </span>
+                </div>
+                <Progress value={(limits.current / limits.max) * 100} className="h-2" />
+                <p className="mt-1 text-xs text-blue-600">
+                  Máx. {limits.maxPerPerson} por persona · {members.length} participantes
+                </p>
+              </div>
+            </div>
+          )}
+
           {!isDrawn && isAdmin && (
             <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
               <h3 className="text-sm font-semibold">Agregar Nueva Restricción</h3>
@@ -229,10 +273,16 @@ export function ExclusionsManager({ groupId, members, isAdmin, isDrawn }: Exclus
 
               <Button
                 onClick={handleAddExclusion}
-                disabled={!selectedGiver || !selectedExcluded || isAdding}
+                disabled={
+                  !selectedGiver || !selectedExcluded || isAdding || limits?.remaining === 0
+                }
                 className="w-full"
               >
-                {isAdding ? 'Agregando...' : 'Agregar Restricción'}
+                {isAdding
+                  ? 'Agregando...'
+                  : limits?.remaining === 0
+                    ? 'Límite alcanzado'
+                    : 'Agregar Restricción'}
               </Button>
             </div>
           )}
