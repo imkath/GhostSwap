@@ -796,7 +796,7 @@ export default function GroupPage() {
                     <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Ha agregado ítems
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-slate-400" /> Sin lista
+                    <Clock className="h-3 w-3 text-slate-400" /> Sin ítems aún
                   </span>
                 </div>
               </CardHeader>
@@ -840,7 +840,7 @@ export default function GroupPage() {
                         ) : (
                           <div
                             className="rounded-full bg-slate-100 p-1.5 text-slate-400"
-                            title="Sin lista"
+                            title="Sin ítems aún"
                           >
                             <Clock className="h-3.5 w-3.5" />
                           </div>
