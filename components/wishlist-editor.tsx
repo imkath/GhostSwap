@@ -102,8 +102,24 @@ export function WishlistEditor({
     }
   }, [initialItems])
 
+  // Extract URL from text that might contain extra words
+  const extractUrl = (text: string): string => {
+    const urlPattern =
+      /https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}[^\s]*/gi
+    const matches = text.match(urlPattern)
+    if (matches && matches.length > 0) {
+      let url = matches[0]
+      // Remove trailing punctuation that's not part of URL
+      url = url.replace(/[.,;:!?)>\]]+$/, '')
+      return url
+    }
+    return text
+  }
+
   const handleItemChange = (id: string, field: keyof LocalWishlistItem, value: string) => {
-    setItems(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
+    // If changing URL field, extract the URL from text that might contain extra words
+    const processedValue = field === 'url' ? extractUrl(value) : value
+    setItems(items.map((item) => (item.id === id ? { ...item, [field]: processedValue } : item)))
   }
 
   const handleClearItem = (id: string) => {
