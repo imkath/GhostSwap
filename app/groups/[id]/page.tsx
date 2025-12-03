@@ -139,6 +139,8 @@ export default function GroupPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null)
+  const [showRemoveMemberDialog, setShowRemoveMemberDialog] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
 
@@ -413,13 +415,16 @@ export default function GroupPage() {
     setIsLoadingActivities(false)
   }
 
-  const handleRemoveMember = async (memberId: string) => {
-    setRemovingMemberId(memberId)
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return
+    setRemovingMemberId(memberToRemove.id)
 
-    const result = await removeMember(groupId, memberId)
+    const result = await removeMember(groupId, memberToRemove.id)
 
     if (result.success) {
       toast.success('Miembro eliminado')
+      setShowRemoveMemberDialog(false)
+      setMemberToRemove(null)
       await fetchGroupData()
     } else {
       toast.error(result.error || 'Error al eliminar miembro')
@@ -859,16 +864,17 @@ export default function GroupPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleRemoveMember(member.id)}
-                              disabled={removingMemberId === member.id}
+                              onClick={() => {
+                                setMemberToRemove({
+                                  id: member.id,
+                                  name: member.profile.full_name || member.profile.email,
+                                })
+                                setShowRemoveMemberDialog(true)
+                              }}
                               className="h-6 w-6 text-slate-400 hover:bg-red-50 hover:text-red-500"
                               title="Eliminar miembro"
                             >
-                              {removingMemberId === member.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <UserMinus className="h-3 w-3" />
-                              )}
+                              <UserMinus className="h-3 w-3" />
                             </Button>
                           )}
                       </div>
@@ -1088,6 +1094,48 @@ export default function GroupPage() {
                 <LogOut className="mr-2 h-4 w-4" />
               )}
               Abandonar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Member Dialog */}
+      <Dialog open={showRemoveMemberDialog} onOpenChange={setShowRemoveMemberDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserMinus className="h-5 w-5 text-red-600" />
+              Eliminar miembro
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              ¿Estás seguro de que quieres eliminar a <strong>{memberToRemove?.name}</strong> del
+              grupo?
+              <br />
+              <br />
+              Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRemoveMemberDialog(false)
+                setMemberToRemove(null)
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRemoveMember}
+              disabled={removingMemberId === memberToRemove?.id}
+            >
+              {removingMemberId === memberToRemove?.id ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <UserMinus className="mr-2 h-4 w-4" />
+              )}
+              Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>
