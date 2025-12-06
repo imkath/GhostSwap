@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { LandingHeader } from '@/components/landing-header'
 import { Footer } from '@/components/footer'
+import { BusinessCTA } from '@/components/business-cta'
 import { AuroraBackground } from '@/components/aurora-background'
 import { AnimatedFeatures } from '@/components/animated-features'
 import { SectionAurora } from '@/components/section-aurora'
@@ -240,6 +241,7 @@ export default function LandingPage() {
         </section>
       </main>
 
+      <BusinessCTA />
       <Footer />
     </div>
   )
