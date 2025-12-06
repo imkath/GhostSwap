@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Building2, ShieldCheck, Palette, Copy, Check } from 'lucide-react'
+import { Building2, ShieldCheck, Palette, Copy, Check, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const CONTACT_EMAIL = 'hello@kthcsk.me'
@@ -117,6 +118,14 @@ export function BusinessCTA() {
         <p className="mt-4 text-sm text-slate-400">
           Escríbenos y te respondemos en menos de 24 horas
         </p>
+
+        <Link
+          href="/business"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+        >
+          Ver más detalles
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
     </section>
   )
