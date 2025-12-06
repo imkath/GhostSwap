@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import {
   Building2,
   Shield,
@@ -23,6 +22,7 @@ import {
 } from '@/components/ui/accordion'
 import { LandingHeader } from '@/components/landing-header'
 import { Footer } from '@/components/footer'
+import { AuroraBackgroundBusiness } from '@/components/aurora-background-business'
 
 export const metadata: Metadata = {
   title: 'GhostSwap para Empresas - Amigo Secreto Corporativo',
@@ -41,8 +41,11 @@ export default function BusinessPage() {
 
       <main className="flex-1">
         {/* Hero B2B */}
-        <section className="relative border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-20 md:py-28">
-          <div className="mx-auto max-w-4xl text-center">
+        <section className="relative border-b border-slate-200 px-4 py-20 md:py-28">
+          <AuroraBackgroundBusiness variant={1} />
+          <div className="pointer-events-none absolute inset-0 bg-white/40" />
+
+          <div className="relative z-10 mx-auto max-w-4xl text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-100 px-4 py-1.5 text-sm font-medium text-indigo-700">
               <Building2 className="h-4 w-4" />
               GhostSwap para Empresas
@@ -184,8 +187,10 @@ export default function BusinessPage() {
         </section>
 
         {/* Pricing Tiers */}
-        <section className="border-b border-slate-200 bg-slate-50 py-20">
-          <div className="container mx-auto max-w-5xl px-4">
+        <section className="relative border-b border-slate-200 py-20">
+          <AuroraBackgroundBusiness variant={2} />
+          <div className="pointer-events-none absolute inset-0 bg-white/40" />
+          <div className="relative z-10 container mx-auto max-w-5xl px-4">
             <div className="mb-12 text-center">
               <h2 className="mb-4 text-3xl font-bold text-slate-900">Planes para tu empresa</h2>
               <p className="text-lg text-slate-500">
@@ -198,26 +203,28 @@ export default function BusinessPage() {
               <div className="rounded-2xl border border-slate-200 bg-white p-8 transition-all hover:border-slate-300 hover:shadow-lg">
                 <div className="mb-6">
                   <h3 className="mb-2 text-2xl font-bold text-slate-900">Team Branding</h3>
-                  <p className="text-slate-500">Ideal para equipos que quieren su identidad</p>
+                  <p className="text-slate-500">Ideal para equipos que quieren identidad rápida</p>
                 </div>
 
                 <div className="mb-8">
-                  <span className="text-4xl font-bold text-slate-900">Consultar</span>
+                  <span className="text-4xl font-bold text-slate-900">$150.000</span>
                   <span className="text-slate-500"> / evento</span>
                 </div>
 
                 <ul className="mb-8 space-y-4">
                   <li className="flex items-center gap-3">
                     <Palette className="h-5 w-5 text-indigo-500" />
-                    <span className="text-slate-600">Logo propio en la plataforma</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Palette className="h-5 w-5 text-indigo-500" />
-                    <span className="text-slate-600">Colores corporativos personalizados</span>
+                    <span className="text-slate-600">Logo y colores corporativos</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Globe className="h-5 w-5 text-indigo-500" />
-                    <span className="text-slate-600">URL personalizada simple</span>
+                    <span className="text-slate-600">
+                      Subdominio exclusivo (empresa.ghostswap.app)
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Lock className="h-5 w-5 text-indigo-500" />
+                    <span className="text-slate-600">Restricción de correo (@empresa.com)</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-indigo-500" />
@@ -245,7 +252,7 @@ export default function BusinessPage() {
 
                 <div className="mb-6">
                   <h3 className="mb-2 text-2xl font-bold text-slate-900">Enterprise White-Label</h3>
-                  <p className="text-slate-500">Control total para grandes empresas</p>
+                  <p className="text-slate-500">Control total, privacidad y dominio propio</p>
                 </div>
 
                 <div className="mb-8">
@@ -260,19 +267,21 @@ export default function BusinessPage() {
                   </li>
                   <li className="flex items-center gap-3">
                     <Globe className="h-5 w-5 text-indigo-500" />
-                    <span className="text-slate-600">Dominio propio (CNAME)</span>
+                    <span className="text-slate-600">
+                      Tu propio dominio (navidad.tuempresa.com)
+                    </span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Lock className="h-5 w-5 text-indigo-500" />
-                    <span className="text-slate-600">SSO o restricción de dominio de correo</span>
+                    <Shield className="h-5 w-5 text-indigo-500" />
+                    <span className="text-slate-600">Base de datos aislada (mayor privacidad)</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Headphones className="h-5 w-5 text-indigo-500" />
-                    <span className="text-slate-600">Soporte prioritario</span>
+                    <span className="text-slate-600">Soporte prioritario por WhatsApp</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-indigo-500" />
-                    <span className="text-slate-600">Colaboradores ilimitados</span>
+                    <span className="text-slate-600">Reporte de participación post-evento</span>
                   </li>
                 </ul>
 
@@ -307,7 +316,7 @@ export default function BusinessPage() {
               </div>
 
               <div className="rounded-xl border border-slate-200 p-6 transition-all hover:border-slate-300 hover:shadow-sm">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
                   <Zap className="h-6 w-6" />
                 </div>
                 <h3 className="mb-2 font-semibold text-slate-900">Implementación rápida</h3>
@@ -317,7 +326,7 @@ export default function BusinessPage() {
               </div>
 
               <div className="rounded-xl border border-slate-200 p-6 transition-all hover:border-slate-300 hover:shadow-sm">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
                   <Users className="h-6 w-6" />
                 </div>
                 <h3 className="mb-2 font-semibold text-slate-900">Escalable</h3>
@@ -330,13 +339,15 @@ export default function BusinessPage() {
         </section>
 
         {/* FAQ */}
-        <section className="bg-slate-50 py-20">
-          <div className="container mx-auto max-w-3xl px-4">
+        <section className="relative py-20">
+          <AuroraBackgroundBusiness variant={3} />
+          <div className="pointer-events-none absolute inset-0 bg-white/40" />
+          <div className="relative z-10 container mx-auto max-w-3xl px-4">
             <div className="mb-12 text-center">
               <h2 className="mb-4 text-3xl font-bold text-slate-900">Preguntas frecuentes</h2>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 backdrop-blur-sm">
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="factura">
                   <AccordionTrigger className="text-left text-base font-medium text-slate-900 hover:no-underline">
@@ -374,7 +385,7 @@ export default function BusinessPage() {
         </section>
 
         {/* Final CTA */}
-        <section className="border-t border-slate-200 bg-white py-20">
+        <section className="relative z-10 border-t border-slate-200 bg-white py-20">
           <div className="mx-auto max-w-2xl px-4 text-center">
             <h2 className="mb-4 text-2xl font-bold text-slate-900">
               ¿Listo para organizar el Amigo Secreto de tu empresa?
