@@ -16,6 +16,12 @@ import {
   BookOpen,
   Shirt,
   Coffee,
+  Plus,
+  Gift,
+  Heart,
+  Music,
+  Gamepad2,
+  Home,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
@@ -34,7 +40,7 @@ interface LocalWishlistItem {
   url: string
 }
 
-// Configuración de cada slot con placeholder, icono y categoría
+// Configuración de cada slot con placeholder, icono y categoría (hasta 10)
 const wishlistSlots = [
   {
     placeholder: 'Ej: Unos audífonos bluetooth o accesorios para mi setup...',
@@ -53,7 +59,7 @@ const wishlistSlots = [
   },
   {
     placeholder: 'Ej: Una planta para mi escritorio o una vela aromática...',
-    icon: Coffee,
+    icon: Home,
     category: 'Decoración/Casa',
   },
   {
@@ -61,15 +67,39 @@ const wishlistSlots = [
     icon: Sparkles,
     category: 'Comodín',
   },
+  {
+    placeholder: 'Ej: Entradas para un concierto o vinilos de mi banda favorita...',
+    icon: Music,
+    category: 'Música/Eventos',
+  },
+  {
+    placeholder: 'Ej: Un juego de mesa o videojuego que quiero probar...',
+    icon: Gamepad2,
+    category: 'Gaming/Ocio',
+  },
+  {
+    placeholder: 'Ej: Productos de skincare o accesorios de autocuidado...',
+    icon: Heart,
+    category: 'Autocuidado',
+  },
+  {
+    placeholder: 'Ej: Una taza térmica o un set de café especial...',
+    icon: Coffee,
+    category: 'Café/Té',
+  },
+  {
+    placeholder: 'Ej: Cualquier cosa que te inspire, ¡me encanta lo inesperado!...',
+    icon: Gift,
+    category: 'Sorpresa',
+  },
 ]
 
-export function WishlistEditor({
-  groupId,
-  memberId,
-  initialItems = [],
-  onSave,
-}: WishlistEditorProps) {
+const MAX_WISHLIST_ITEMS = 10
+const DEFAULT_VISIBLE_ITEMS = 5
+
+export function WishlistEditor({ memberId, initialItems = [], onSave }: WishlistEditorProps) {
   const [items, setItems] = useState<LocalWishlistItem[]>([])
+  const [visibleCount, setVisibleCount] = useState(DEFAULT_VISIBLE_ITEMS)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [error, setError] = useState('')
@@ -82,23 +112,26 @@ export function WishlistEditor({
         description: item.description || '',
         url: item.url || '',
       }))
-      // Pad to 5 items
-      while (mappedItems.length < 5) {
+      // Pad to default visible items
+      while (mappedItems.length < DEFAULT_VISIBLE_ITEMS) {
         mappedItems.push({
           id: `new-${mappedItems.length}`,
           description: '',
           url: '',
         })
       }
-      setItems(mappedItems.slice(0, 5))
+      setItems(mappedItems.slice(0, MAX_WISHLIST_ITEMS))
+      // Set visible count based on how many items have content
+      const filledCount = mappedItems.filter((item) => item.description.trim()).length
+      setVisibleCount(Math.max(DEFAULT_VISIBLE_ITEMS, Math.min(filledCount, MAX_WISHLIST_ITEMS)))
     } else {
-      setItems([
-        { id: 'new-0', description: '', url: '' },
-        { id: 'new-1', description: '', url: '' },
-        { id: 'new-2', description: '', url: '' },
-        { id: 'new-3', description: '', url: '' },
-        { id: 'new-4', description: '', url: '' },
-      ])
+      // Create default visible items
+      const defaultItems = Array.from({ length: DEFAULT_VISIBLE_ITEMS }, (_, i) => ({
+        id: `new-${i}`,
+        description: '',
+        url: '',
+      }))
+      setItems(defaultItems)
     }
   }, [initialItems])
 
@@ -124,6 +157,24 @@ export function WishlistEditor({
 
   const handleClearItem = (id: string) => {
     setItems(items.map((item) => (item.id === id ? { ...item, description: '', url: '' } : item)))
+  }
+
+  const handleAddMoreItems = () => {
+    const newVisibleCount = Math.min(visibleCount + 1, MAX_WISHLIST_ITEMS)
+    setVisibleCount(newVisibleCount)
+
+    // If we need more items in the array, add them
+    if (items.length < newVisibleCount) {
+      const newItems = [...items]
+      while (newItems.length < newVisibleCount) {
+        newItems.push({
+          id: `new-${newItems.length}`,
+          description: '',
+          url: '',
+        })
+      }
+      setItems(newItems)
+    }
   }
 
   const handleSave = async () => {
@@ -162,6 +213,12 @@ export function WishlistEditor({
       toast.success('Lista de deseos guardada', {
         icon: <Sparkles className="h-4 w-4" />,
       })
+
+      // Adjust visible count to match filled items (minimum 5)
+      const filledCount = items.filter((item) => item.description.trim()).length
+      const newVisibleCount = Math.max(DEFAULT_VISIBLE_ITEMS, filledCount)
+      setVisibleCount(newVisibleCount)
+
       if (onSave) {
         onSave()
       }
@@ -196,11 +253,11 @@ export function WishlistEditor({
         <div className="space-y-1">
           <h3 className="text-lg font-semibold text-slate-900">Mi Lista de Deseos</h3>
           <p className="text-sm text-slate-500">
-            Agrega hasta 5 deseos para inspirar a tu Amigo Secreto
+            Agrega hasta 10 deseos para inspirar a tu Amigo Secreto
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">{filledItemsCount}/5</span>
+          <span className="text-xs text-slate-400">{filledItemsCount}/10</span>
           {lastSaved && (
             <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-600">
               <Check className="h-3 w-3" /> Guardado
@@ -216,7 +273,7 @@ export function WishlistEditor({
       )}
 
       <div className="space-y-3">
-        {items.map((item, index) => {
+        {items.slice(0, visibleCount).map((item, index) => {
           const slot = wishlistSlots[index]
           const SlotIcon = slot.icon
 
@@ -298,6 +355,20 @@ export function WishlistEditor({
             </div>
           )
         })}
+
+        {/* Botón para agregar más items */}
+        {visibleCount < MAX_WISHLIST_ITEMS && (
+          <button
+            type="button"
+            onClick={handleAddMoreItems}
+            className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-500 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50/50 hover:text-indigo-600"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm transition-colors group-hover:text-indigo-500">
+              <Plus className="h-4 w-4" />
+            </div>
+            <span className="font-medium">Agregar otro deseo</span>
+          </button>
+        )}
       </div>
 
       <div className="flex justify-end">
