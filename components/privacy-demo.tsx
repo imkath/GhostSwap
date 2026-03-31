@@ -225,14 +225,10 @@ export function PrivacyDemo() {
         const blur = card.blurAmount
 
         if (blur > 0.1) {
-          // Draw pixelated/distorted text
-          ctx.save()
-          ctx.globalAlpha = Math.max(0.15, 1 - blur)
-          ctx.filter = `blur(${blur * 8}px)`
-          ctx.fillStyle = '#94a3b8'
+          // Hidden — show dots only
+          ctx.fillStyle = '#cbd5e1'
           ctx.font = `700 ${Math.max(13, card.w * 0.13)}px Inter, system-ui, sans-serif`
-          ctx.fillText(card.match, cx, matchNameY)
-          ctx.restore()
+          ctx.fillText('• • • •', cx, matchNameY)
 
           // Lock icon
           if (card.lockAlpha > 0.05) {
@@ -304,18 +300,18 @@ export function PrivacyDemo() {
         const isOwner = s.activeUser === i + 1
 
         if (isSpyMode) {
-          // Admin/spy mode: eye follows cursor, cards react
+          // Admin/spy mode: ALL cards always hidden, proximity only adds shake
+          card.targetBlur = 1
+          card.blurAmount += (card.targetBlur - card.blurAmount) * 0.08
+
           const cardCX = card.x + card.w / 2
           const cardCY = card.y + card.h / 2
           const dist = Math.sqrt((mx - cardCX) ** 2 + (my - cardCY) ** 2)
           const proximity = Math.max(0, 1 - dist / (W * 0.25))
 
-          card.targetBlur = mx > 0 ? proximity : 0
-          card.blurAmount += (card.targetBlur - card.blurAmount) * 0.08
-
-          // Shake when eye is close
-          if (card.blurAmount > 0.3) {
-            const intensity = card.blurAmount * 2
+          // Shake intensifies when eye is close
+          if (mx > 0 && proximity > 0.2) {
+            const intensity = proximity * 3
             card.shakeX = Math.sin(s.time * 20 + i * 2) * intensity
             card.shakeY = Math.cos(s.time * 25 + i * 3) * intensity * 0.6
           } else {
@@ -323,7 +319,7 @@ export function PrivacyDemo() {
             card.shakeY *= 0.9
           }
 
-          card.lockAlpha += ((card.blurAmount > 0.6 ? 1 : 0) - card.lockAlpha) * 0.1
+          card.lockAlpha += (1 - card.lockAlpha) * 0.1
         } else {
           // Participant view
           card.targetBlur = isOwner ? 0 : 1
