@@ -53,7 +53,7 @@ export function ScrambleTitle() {
 
       charEl.style.transition = shuffled
         ? 'none'
-        : `transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) ${charIdx * 30}ms, opacity 0.3s`
+        : `transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${charIdx * 40}ms, opacity 0.4s ease ${charIdx * 40}ms`
       charEl.style.transform = `translateX(${x}px)`
       charEl.style.opacity = shuffled ? '0.55' : '1'
     })
@@ -71,12 +71,10 @@ export function ScrambleTitle() {
     if (!ready || hasRun.current) return
     hasRun.current = true
 
-    // After a pause, resolve
-    const timer = setTimeout(() => {
+    // Start resolving immediately — letters are already in motion
+    requestAnimationFrame(() => {
       setShuffled(false)
-    }, 900)
-
-    return () => clearTimeout(timer)
+    })
   }, [ready])
 
   useEffect(() => {
