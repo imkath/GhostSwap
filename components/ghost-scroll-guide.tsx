@@ -6,8 +6,13 @@ export function GhostScrollGuide() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef({
     progress: 0,
-    ghostScreenY: 0,
+    ghostX: 0,
+    ghostY: 0,
+    targetX: 0,
+    targetY: 0,
     time: 0,
+    velocity: 0,
+    lastProgress: 0,
     particles: [] as {
       x: number
       y: number
@@ -17,39 +22,31 @@ export function GhostScrollGuide() {
       size: number
     }[],
     lastEmit: 0,
-    velocity: 0,
-    lastProgress: 0,
+    trail: [] as { x: number; y: number; alpha: number }[],
   })
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    // Hide on mobile — too narrow
-    const mql = window.matchMedia('(min-width: 768px)')
-    if (!mql.matches) {
-      canvas.style.display = 'none'
-      const onChange = () => {
-        canvas.style.display = mql.matches ? 'block' : 'none'
-      }
-      mql.addEventListener('change', onChange)
-      return () => mql.removeEventListener('change', onChange)
-    }
+    // Hide on mobile
+    if (window.innerWidth < 768) return
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     let animId = 0
-    const CW = 44 // canvas width
-    let CH = 0
+    let W = 0
+    let H = 0
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      CH = window.innerHeight
-      canvas.width = CW * dpr
-      canvas.height = CH * dpr
-      canvas.style.width = CW + 'px'
-      canvas.style.height = CH + 'px'
+      W = window.innerWidth
+      H = window.innerHeight
+      canvas.width = W * dpr
+      canvas.height = H * dpr
+      canvas.style.width = W + 'px'
+      canvas.style.height = H + 'px'
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
 
@@ -62,73 +59,156 @@ export function GhostScrollGuide() {
       return docHeight > 0 ? Math.min(1, scrollTop / docHeight) : 0
     }
 
-    // Gentle wave for path
-    const getPathX = (t: number) => {
-      return CW / 2 + Math.sin(t * Math.PI * 4) * 6 + Math.sin(t * Math.PI * 1.5) * 3
+    // Wandering path — the ghost explores the page
+    // Each waypoint is a position on screen at a certain scroll %
+    const getWaypoint = (t: number): { x: number; y: number } => {
+      // Normalize t to 0-1
+      const p = Math.max(0, Math.min(1, t))
+
+      // Define waypoints as % of viewport (the ghost wanders across)
+      const waypoints = [
+        { t: 0.0, x: 0.85, y: 0.25 }, // Start: top right area
+        { t: 0.08, x: 0.92, y: 0.4 }, // Drift right
+        { t: 0.15, x: 0.78, y: 0.55 }, // Come left
+        { t: 0.25, x: 0.12, y: 0.35 }, // Cross to left side
+        { t: 0.35, x: 0.08, y: 0.6 }, // Stay left, go down
+        { t: 0.45, x: 0.3, y: 0.75 }, // Wander center-left
+        { t: 0.55, x: 0.88, y: 0.5 }, // Cross to right
+        { t: 0.65, x: 0.92, y: 0.7 }, // Right side down
+        { t: 0.75, x: 0.5, y: 0.45 }, // Back to center
+        { t: 0.85, x: 0.15, y: 0.65 }, // Left again
+        { t: 0.95, x: 0.5, y: 0.8 }, // Center bottom
+        { t: 1.0, x: 0.85, y: 0.9 }, // End bottom right
+      ]
+
+      // Find surrounding waypoints
+      let i = 0
+      for (; i < waypoints.length - 1; i++) {
+        if (p <= waypoints[i + 1]!.t) break
+      }
+
+      const wp1 = waypoints[i]!
+      const wp2 = waypoints[Math.min(i + 1, waypoints.length - 1)]!
+      const segT = wp2.t - wp1.t
+      const localT = segT > 0 ? (p - wp1.t) / segT : 0
+
+      // Smooth interpolation
+      const ease = localT * localT * (3 - 2 * localT) // smoothstep
+
+      return {
+        x: (wp1.x + (wp2.x - wp1.x) * ease) * W,
+        y: (wp1.y + (wp2.y - wp1.y) * ease) * H,
+      }
     }
 
-    const drawGhost = (x: number, y: number, size: number, alpha: number, time: number) => {
+    const drawGhost = (
+      x: number,
+      y: number,
+      size: number,
+      alpha: number,
+      time: number,
+      vx: number
+    ) => {
       ctx.save()
       ctx.globalAlpha = alpha
       ctx.translate(x, y)
 
-      const bob = Math.sin(time * 3) * 1.5
+      // Bob gently
+      const bob = Math.sin(time * 2.5) * 2
       ctx.translate(0, bob)
-      ctx.rotate(Math.sin(time * 2) * 0.06)
+
+      // Lean into movement direction
+      const lean = Math.max(-0.15, Math.min(0.15, vx * 0.003))
+      ctx.rotate(lean)
 
       const s = size
 
-      // Glow
-      ctx.shadowColor = '#818cf8'
-      ctx.shadowBlur = 14
+      // Outer glow
+      ctx.shadowColor = 'rgba(129, 140, 248, 0.4)'
+      ctx.shadowBlur = 20
 
       // Ghost body
       ctx.beginPath()
       ctx.moveTo(-s * 0.5, s * 0.15)
       ctx.bezierCurveTo(-s * 0.5, -s * 0.55, s * 0.5, -s * 0.55, s * 0.5, s * 0.15)
-      ctx.lineTo(s * 0.5, s * 0.4)
-      ctx.bezierCurveTo(s * 0.35, s * 0.25, s * 0.2, s * 0.5, s * 0.1, s * 0.35)
-      ctx.bezierCurveTo(0, s * 0.5, -0.1 * s, s * 0.3, -s * 0.2, s * 0.45)
-      ctx.bezierCurveTo(-s * 0.3, s * 0.3, -s * 0.4, s * 0.5, -s * 0.5, s * 0.4)
+      ctx.lineTo(s * 0.5, s * 0.38)
+
+      // Wavy bottom that animates
+      const wave = time * 3
+      ctx.bezierCurveTo(
+        s * 0.35,
+        s * 0.28 + Math.sin(wave) * s * 0.06,
+        s * 0.2,
+        s * 0.48 + Math.sin(wave + 1) * s * 0.05,
+        s * 0.1,
+        s * 0.33 + Math.sin(wave + 2) * s * 0.04
+      )
+      ctx.bezierCurveTo(
+        0,
+        s * 0.48 + Math.sin(wave + 3) * s * 0.05,
+        -s * 0.1,
+        s * 0.3 + Math.sin(wave + 4) * s * 0.04,
+        -s * 0.2,
+        s * 0.44 + Math.sin(wave + 5) * s * 0.05
+      )
+      ctx.bezierCurveTo(
+        -s * 0.3,
+        s * 0.3 + Math.sin(wave + 6) * s * 0.04,
+        -s * 0.4,
+        s * 0.46 + Math.sin(wave + 7) * s * 0.05,
+        -s * 0.5,
+        s * 0.38
+      )
       ctx.closePath()
 
-      const grad = ctx.createLinearGradient(0, -s * 0.5, 0, s * 0.5)
-      grad.addColorStop(0, 'rgba(129, 140, 248, 0.92)')
-      grad.addColorStop(1, 'rgba(99, 102, 241, 0.72)')
+      // Semi-transparent fill
+      const grad = ctx.createRadialGradient(0, -s * 0.1, 0, 0, 0, s * 0.6)
+      grad.addColorStop(0, 'rgba(165, 180, 252, 0.85)')
+      grad.addColorStop(0.6, 'rgba(129, 140, 248, 0.7)')
+      grad.addColorStop(1, 'rgba(99, 102, 241, 0.5)')
       ctx.fillStyle = grad
       ctx.fill()
 
       ctx.shadowBlur = 0
 
-      // Eyes
-      const eyeY = -s * 0.1
-      const sp = s * 0.17
-      ctx.fillStyle = '#1e1b4b'
+      // Eyes — look in movement direction
+      const eyeY = -s * 0.12
+      const sp = s * 0.16
+      const lookX = Math.max(-s * 0.03, Math.min(s * 0.03, vx * 0.004))
+
+      // Eye whites
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'
       ctx.beginPath()
-      ctx.arc(-sp, eyeY, s * 0.07, 0, Math.PI * 2)
+      ctx.ellipse(-sp, eyeY, s * 0.1, s * 0.08, 0, 0, Math.PI * 2)
       ctx.fill()
       ctx.beginPath()
-      ctx.arc(sp, eyeY, s * 0.07, 0, Math.PI * 2)
+      ctx.ellipse(sp, eyeY, s * 0.1, s * 0.08, 0, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Pupils
+      ctx.fillStyle = '#312e81'
+      ctx.beginPath()
+      ctx.arc(-sp + lookX, eyeY, s * 0.05, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(sp + lookX, eyeY, s * 0.05, 0, Math.PI * 2)
       ctx.fill()
 
       // Glints
-      ctx.fillStyle = 'rgba(255,255,255,0.85)'
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'
       ctx.beginPath()
-      ctx.arc(-sp - s * 0.02, eyeY - s * 0.025, s * 0.025, 0, Math.PI * 2)
+      ctx.arc(-sp + lookX - s * 0.015, eyeY - s * 0.02, s * 0.02, 0, Math.PI * 2)
       ctx.fill()
       ctx.beginPath()
-      ctx.arc(sp - s * 0.02, eyeY - s * 0.025, s * 0.025, 0, Math.PI * 2)
+      ctx.arc(sp + lookX - s * 0.015, eyeY - s * 0.02, s * 0.02, 0, Math.PI * 2)
       ctx.fill()
 
-      // Cheeks
-      ctx.globalAlpha = alpha * 0.25
-      ctx.fillStyle = '#f472b6'
+      // Subtle smile
+      ctx.strokeStyle = 'rgba(49, 46, 129, 0.3)'
+      ctx.lineWidth = 1
       ctx.beginPath()
-      ctx.arc(-sp - s * 0.07, eyeY + s * 0.07, s * 0.05, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.beginPath()
-      ctx.arc(sp + s * 0.07, eyeY + s * 0.07, s * 0.05, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.arc(0, eyeY + s * 0.12, s * 0.08, 0.1 * Math.PI, 0.9 * Math.PI)
+      ctx.stroke()
 
       ctx.restore()
     }
@@ -140,67 +220,63 @@ export function GhostScrollGuide() {
       const rawProgress = getScrollProgress()
       s.velocity = rawProgress - s.lastProgress
       s.lastProgress = rawProgress
-      s.progress += (rawProgress - s.progress) * 0.1
+      s.progress += (rawProgress - s.progress) * 0.06
 
-      ctx.clearRect(0, 0, CW, CH)
+      ctx.clearRect(0, 0, W, H)
 
-      // Ghost position on screen (fixed viewport)
-      const margin = 56
-      const targetY = margin + s.progress * (CH - margin * 2)
-      s.ghostScreenY += (targetY - s.ghostScreenY) * 0.07
+      // Get target from path
+      const target = getWaypoint(s.progress)
+      s.targetX = target.x
+      s.targetY = target.y
 
-      const ghostX = getPathX(s.progress)
+      // Smooth follow with spring-like easing
+      const prevX = s.ghostX
+      s.ghostX += (s.targetX - s.ghostX) * 0.04
+      s.ghostY += (s.targetY - s.ghostY) * 0.04
+      const vx = s.ghostX - prevX
 
-      // Draw trail line (dotted, fading up)
-      const trailLengthPx = Math.min(s.ghostScreenY - margin, 200)
-      if (trailLengthPx > 10) {
-        const steps = Math.floor(trailLengthPx / 3)
-        for (let i = 0; i < steps; i++) {
-          const frac = i / steps
-          const ty = s.ghostScreenY - frac * trailLengthPx
-          const tProgress = s.progress - frac * (trailLengthPx / (CH - margin * 2))
-          const tx = getPathX(Math.max(0, tProgress))
-          const alpha = (1 - frac) * 0.35
+      // Add wobble
+      s.ghostX += Math.sin(s.time * 1.2) * 3
+      s.ghostY += Math.sin(s.time * 0.9 + 1) * 2
 
-          ctx.beginPath()
-          ctx.arc(tx, ty, 1.2, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(129, 140, 248, ${alpha})`
-          ctx.fill()
-        }
-
-        // Bright glow near head
-        const glowSteps = Math.min(25, steps)
-        ctx.save()
-        ctx.beginPath()
-        ctx.moveTo(ghostX, s.ghostScreenY)
-        for (let i = 0; i < glowSteps; i++) {
-          const frac = i / glowSteps
-          const ty = s.ghostScreenY - frac * Math.min(60, trailLengthPx)
-          const tProgress = s.progress - frac * (60 / (CH - margin * 2))
-          const tx = getPathX(Math.max(0, tProgress))
-          ctx.lineTo(tx, ty)
-        }
-        ctx.strokeStyle = 'rgba(129, 140, 248, 0.2)'
-        ctx.lineWidth = 3
-        ctx.shadowColor = '#818cf8'
-        ctx.shadowBlur = 8
-        ctx.stroke()
-        ctx.restore()
+      // Trail
+      if (Math.abs(s.velocity) > 0.0003 || s.trail.length === 0) {
+        s.trail.push({ x: s.ghostX, y: s.ghostY, alpha: 0.35 })
+        if (s.trail.length > 60) s.trail.shift()
       }
 
-      // Particles — emit when scrolling
-      const isScrolling = Math.abs(s.velocity) > 0.001
-      if (isScrolling && s.time - s.lastEmit > 0.05) {
+      // Draw trail
+      s.trail.forEach((tp, i) => {
+        tp.alpha *= 0.97
+        if (tp.alpha < 0.01) return
+
+        const trailSize = 2 + (i / s.trail.length) * 2
+        ctx.save()
+        ctx.globalAlpha = tp.alpha * 0.5
+        ctx.fillStyle = '#a5b4fc'
+        ctx.shadowColor = '#818cf8'
+        ctx.shadowBlur = 4
+        ctx.beginPath()
+        ctx.arc(tp.x, tp.y, trailSize, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      })
+
+      // Clean dead trail points
+      s.trail = s.trail.filter((tp) => tp.alpha > 0.01)
+
+      // Particles on scroll
+      const isScrolling = Math.abs(s.velocity) > 0.0008
+      if (isScrolling && s.time - s.lastEmit > 0.08) {
         s.lastEmit = s.time
-        const count = Math.min(3, Math.ceil(Math.abs(s.velocity) * 200))
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < 2; i++) {
           s.particles.push({
-            x: ghostX + (Math.random() - 0.5) * 8,
-            y: s.ghostScreenY + (Math.random() - 0.5) * 6,
-            vx: (Math.random() - 0.5) * 0.6,
-            vy: (Math.random() - 0.5) * 0.4 - Math.sign(s.velocity) * 0.3,
+            x: s.ghostX + (Math.random() - 0.5) * 12,
+            y: s.ghostY + (Math.random() - 0.5) * 8,
+            vx: (Math.random() - 0.5) * 1.5,
+            vy: -Math.random() * 0.8 - 0.3,
             life: 1,
-            size: 1 + Math.random() * 1.5,
+            size: 1 + Math.random() * 2,
           })
         }
       }
@@ -210,13 +286,14 @@ export function GhostScrollGuide() {
       s.particles.forEach((p) => {
         p.x += p.vx
         p.y += p.vy
-        p.life -= 0.025
+        p.vy -= 0.01 // float upward
+        p.life -= 0.02
 
         ctx.save()
-        ctx.globalAlpha = p.life * 0.5
-        ctx.fillStyle = '#a5b4fc'
+        ctx.globalAlpha = p.life * 0.4
+        ctx.fillStyle = '#c7d2fe'
         ctx.shadowColor = '#818cf8'
-        ctx.shadowBlur = 3
+        ctx.shadowBlur = 4
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2)
         ctx.fill()
@@ -224,27 +301,15 @@ export function GhostScrollGuide() {
       })
 
       // Draw ghost
-      drawGhost(ghostX, s.ghostScreenY, 11, 0.85, s.time)
-
-      // Progress dots at quartiles
-      ;[0.25, 0.5, 0.75].forEach((pct) => {
-        const dotY = margin + pct * (CH - margin * 2)
-        const passed = s.progress > pct - 0.02
-
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(CW / 2, dotY, passed ? 3 : 2, 0, Math.PI * 2)
-        ctx.fillStyle = passed ? 'rgba(129, 140, 248, 0.5)' : 'rgba(148, 163, 184, 0.15)'
-        if (passed) {
-          ctx.shadowColor = '#818cf8'
-          ctx.shadowBlur = 6
-        }
-        ctx.fill()
-        ctx.restore()
-      })
+      drawGhost(s.ghostX, s.ghostY, 16, 0.75, s.time, vx)
 
       animId = requestAnimationFrame(frame)
     }
+
+    // Initialize ghost position
+    const initial = getWaypoint(getScrollProgress())
+    stateRef.current.ghostX = initial.x
+    stateRef.current.ghostY = initial.y
 
     animId = requestAnimationFrame(frame)
 
@@ -257,7 +322,7 @@ export function GhostScrollGuide() {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed top-0 left-0 z-50 hidden md:block"
+      className="pointer-events-none fixed inset-0 z-50 hidden md:block"
       aria-hidden="true"
     />
   )
