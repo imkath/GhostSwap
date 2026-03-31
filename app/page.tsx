@@ -5,6 +5,8 @@ import { Footer } from '@/components/footer'
 import { AuroraBackground } from '@/components/aurora-background'
 import { AnimatedFeatures } from '@/components/animated-features'
 import { SectionAurora } from '@/components/section-aurora'
+import { InteractiveDraw } from '@/components/interactive-draw'
+import { PrivacyDemo } from '@/components/privacy-demo'
 import { Ghost, Calendar, Share2, Shuffle, Users, Star } from 'lucide-react'
 
 const jsonLd = {
@@ -83,57 +85,63 @@ export default function LandingPage() {
           <div className="pointer-events-none absolute inset-0 bg-slate-50/70" aria-hidden="true" />
 
           {/* Content with z-index to stay above background */}
-          <div className="relative z-10 mx-auto max-w-3xl space-y-6 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-600">
-              <Star className="h-3.5 w-3.5" aria-hidden="true" />
-              Sorteos invisibles, regalos inolvidables
-            </div>
-
-            <h1
-              id="hero-title"
-              className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl"
-            >
-              Organiza el <span className="text-indigo-600">Amigo Secreto</span> más genial con
-              GhostSwap
-            </h1>
-
-            <p className="mx-auto max-w-xl text-lg leading-relaxed text-slate-600">
-              Crea tu grupo de intercambio de regalos, comparte el link con tus amigos y deja que la
-              magia del sorteo haga el resto. ¡Así de simple!
-            </p>
-
-            <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
-              <Link href="/login" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="h-12 w-full bg-indigo-600 text-base shadow-lg shadow-indigo-200/50 hover:bg-indigo-700"
-                >
-                  Crear mi grupo
-                </Button>
-              </Link>
-              <Link href="/join" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 w-full border-slate-300 bg-white text-base text-slate-700 hover:bg-slate-50"
-                >
-                  Unirme a un grupo
-                </Button>
-              </Link>
-            </div>
-
-            {/* Social proof */}
-            <div
-              className="flex items-center justify-center gap-6 pt-6 text-sm text-slate-500"
-              aria-label="Beneficios de GhostSwap"
-            >
-              <div className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" aria-hidden="true" />
-                <span>Grupos creados</span>
+          <div className="relative z-10 mx-auto max-w-4xl space-y-8">
+            <div className="space-y-6 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-600">
+                <Star className="h-3.5 w-3.5" aria-hidden="true" />
+                Sorteos invisibles, regalos inolvidables
               </div>
-              <div className="flex items-center gap-1.5">
-                <Ghost className="h-4 w-4" aria-hidden="true" />
-                <span>100% Gratis</span>
+
+              <h1
+                id="hero-title"
+                className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl"
+              >
+                Organiza el <span className="text-indigo-600">Amigo Secreto</span> más genial con
+                GhostSwap
+              </h1>
+
+              <p className="mx-auto max-w-xl text-lg leading-relaxed text-slate-600">
+                Crea tu grupo, comparte el link, y mira cómo el sorteo se hace solo. Así de simple.
+              </p>
+            </div>
+
+            {/* Interactive Draw Demo */}
+            <InteractiveDraw />
+
+            <div className="space-y-4 text-center">
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link href="/login" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    className="h-12 w-full bg-indigo-600 text-base shadow-lg shadow-indigo-200/50 hover:bg-indigo-700"
+                  >
+                    Crear mi grupo
+                  </Button>
+                </Link>
+                <Link href="/join" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 w-full border-slate-300 bg-white text-base text-slate-700 hover:bg-slate-50"
+                  >
+                    Unirme a un grupo
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Social proof */}
+              <div
+                className="flex items-center justify-center gap-6 text-sm text-slate-500"
+                aria-label="Beneficios de GhostSwap"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Ghost className="h-4 w-4" aria-hidden="true" />
+                  <span>100% Gratis</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  <span>Sin ads, sin tracking</span>
+                </div>
               </div>
             </div>
           </div>
@@ -201,20 +209,27 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features + CTA Section with Aurora Background */}
-        <section className="relative overflow-hidden px-4 py-16" aria-labelledby="features-title">
+        {/* Privacy Demo Section */}
+        <section className="relative overflow-hidden px-4 py-16" aria-labelledby="privacy-title">
           <SectionAurora />
 
           <div className="relative z-10">
-            {/* Features */}
-            <div className="mx-auto mb-16 max-w-4xl">
-              <div className="mb-12 text-center">
-                <h2 id="features-title" className="mb-3 text-2xl font-bold text-slate-900">
-                  ¿Por qué GhostSwap para tu Secret Santa?
+            <div className="mx-auto mb-10 max-w-4xl">
+              <div className="mb-8 text-center">
+                <h2 id="privacy-title" className="mb-3 text-2xl font-bold text-slate-900">
+                  Privacidad que se demuestra, no se promete
                 </h2>
-                <p className="text-slate-600">Hecho con cariño para que disfrutes la experiencia</p>
+                <p className="mx-auto max-w-lg text-slate-600">
+                  Ni siquiera el admin puede ver las asignaciones. Cada persona solo ve la suya.
+                  Pruébalo: espía las cartas o cambia de perspectiva.
+                </p>
               </div>
 
+              <PrivacyDemo />
+            </div>
+
+            {/* Features grid below */}
+            <div className="mx-auto mb-16 max-w-4xl">
               <AnimatedFeatures />
             </div>
 
