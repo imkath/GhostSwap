@@ -1,38 +1,36 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Shuffle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
-const NAMES = ['Ana', 'Carlos', 'Luna', 'Diego', 'Sofía', 'Mateo']
-const COLORS = ['#818cf8', '#f472b6', '#34d399', '#fbbf24', '#60a5fa', '#f87171']
+const PEOPLE = [
+  { name: 'Ana', color: '#818cf8' },
+  { name: 'Carlos', color: '#f472b6' },
+  { name: 'Luna', color: '#34d399' },
+  { name: 'Diego', color: '#fbbf24' },
+  { name: 'Sofía', color: '#60a5fa' },
+]
 
-interface Particle {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  life: number
+interface Connection {
+  from: number
+  to: number
   color: string
-  size: number
 }
 
 export function InteractiveDraw() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [phase, setPhase] = useState<'idle' | 'shuffling' | 'revealing' | 'done'>('idle')
+  const [assignments, setAssignments] = useState<number[]>([])
+  const [revealedCount, setRevealedCount] = useState(0)
+  const [connections, setConnections] = useState<Connection[]>([])
+  const [shuffleOffset, setShuffleOffset] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const animRef = useRef<number>(0)
-  const stateRef = useRef({
-    phase: 'idle' as 'idle' | 'shuffling' | 'connecting' | 'done',
-    time: 0,
-    shuffleStart: 0,
-    connectStart: 0,
-    assignments: [] as number[],
-    particles: [] as Particle[],
-    hovered: false,
-  })
-
-  const [phase, setPhase] = useState<'idle' | 'shuffling' | 'connecting' | 'done'>('idle')
+  const shuffleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const generateDerangement = useCallback((): number[] => {
-    const n = NAMES.length
+    const n = PEOPLE.length
     for (let attempt = 0; attempt < 200; attempt++) {
       const perm = Array.from({ length: n }, (_, i) => i)
       for (let i = n - 1; i > 0; i--) {
@@ -41,372 +39,265 @@ export function InteractiveDraw() {
       }
       if (perm.every((v, i) => v !== i)) return perm
     }
-    return [1, 2, 3, 4, 5, 0]
+    return [1, 2, 3, 4, 0]
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (shuffleIntervalRef.current) clearInterval(shuffleIntervalRef.current)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
   }, [])
 
   const startDraw = useCallback(() => {
-    const s = stateRef.current
-    if (s.phase !== 'idle' && s.phase !== 'done') return
-    s.phase = 'shuffling'
-    s.shuffleStart = s.time
-    s.assignments = generateDerangement()
-    s.particles = []
+    if (phase !== 'idle' && phase !== 'done') return
+
+    setConnections([])
+    setRevealedCount(0)
     setPhase('shuffling')
-  }, [generateDerangement])
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) return
+    const result = generateDerangement()
+    setAssignments(result)
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    // Shuffle animation — cycle positions rapidly then slow
+    let count = 0
+    shuffleIntervalRef.current = setInterval(() => {
+      count++
+      setShuffleOffset(count)
 
-    let W = 0
-    let H = 0
+      if (count > 18) {
+        if (shuffleIntervalRef.current) clearInterval(shuffleIntervalRef.current)
+        setPhase('revealing')
 
-    const resize = () => {
-      const rect = container.getBoundingClientRect()
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      W = rect.width
-      H = rect.height
-      canvas.width = W * dpr
-      canvas.height = H * dpr
-      canvas.style.width = W + 'px'
-      canvas.style.height = H + 'px'
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
+        // Reveal connections one by one
+        result.forEach((to, from) => {
+          timeoutRef.current = setTimeout(
+            () => {
+              setConnections((prev) => [...prev, { from, to, color: PEOPLE[from]!.color }])
+              setRevealedCount((prev) => prev + 1)
+            },
+            from * 400 + 200
+          )
+        })
 
-    resize()
-    window.addEventListener('resize', resize)
-
-    const getPositions = (side: 'left' | 'right') => {
-      const cx = side === 'left' ? W * 0.22 : W * 0.78
-      const startY = H * 0.15
-      const gap = (H * 0.7) / (NAMES.length - 1)
-      return NAMES.map((_, i) => ({ x: cx, y: startY + i * gap }))
-    }
-
-    const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
-    const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
-
-    const drawAvatar = (
-      x: number,
-      y: number,
-      name: string,
-      color: string,
-      radius: number,
-      alpha: number,
-      glow: boolean
-    ) => {
-      ctx.save()
-      ctx.globalAlpha = alpha
-
-      if (glow) {
-        ctx.shadowColor = color
-        ctx.shadowBlur = 16
-      }
-
-      // Circle
-      ctx.beginPath()
-      ctx.arc(x, y, radius, 0, Math.PI * 2)
-      ctx.fillStyle = color
-      ctx.fill()
-
-      // Initial letter
-      ctx.shadowBlur = 0
-      ctx.fillStyle = '#fff'
-      ctx.font = `bold ${radius * 0.9}px Inter, system-ui, sans-serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(name[0]!, x, y + 1)
-
-      // Name below
-      ctx.fillStyle = '#64748b'
-      ctx.font = `500 ${Math.max(10, radius * 0.55)}px Inter, system-ui, sans-serif`
-      ctx.fillText(name, x, y + radius + 14)
-
-      ctx.restore()
-    }
-
-    const drawConnection = (
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number,
-      color: string,
-      progress: number,
-      alpha: number
-    ) => {
-      if (progress <= 0) return
-
-      ctx.save()
-      ctx.globalAlpha = alpha
-
-      // Bezier curve
-      const cpx1 = x1 + (x2 - x1) * 0.4
-      const cpy1 = y1
-      const cpx2 = x1 + (x2 - x1) * 0.6
-      const cpy2 = y2
-
-      // Draw partial path
-      ctx.beginPath()
-      ctx.moveTo(x1, y1)
-
-      const steps = Math.floor(progress * 60)
-      for (let i = 0; i <= steps; i++) {
-        const t = i / 60
-        const u = 1 - t
-        const px = u * u * u * x1 + 3 * u * u * t * cpx1 + 3 * u * t * t * cpx2 + t * t * t * x2
-        const py = u * u * u * y1 + 3 * u * u * t * cpy1 + 3 * u * t * t * cpy2 + t * t * t * y2
-        ctx.lineTo(px, py)
-      }
-
-      ctx.strokeStyle = color
-      ctx.lineWidth = 2
-      ctx.shadowColor = color
-      ctx.shadowBlur = 8
-      ctx.stroke()
-
-      // Arrow at tip if fully drawn
-      if (progress > 0.95) {
-        const t = 0.98
-        const u = 1 - t
-        const tipX = u * u * u * x1 + 3 * u * u * t * cpx1 + 3 * u * t * t * cpx2 + t * t * t * x2
-        const tipY = u * u * u * y1 + 3 * u * u * t * cpy1 + 3 * u * t * t * cpy2 + t * t * t * y2
-        const t2 = 0.95
-        const u2 = 1 - t2
-        const prevX =
-          u2 * u2 * u2 * x1 + 3 * u2 * u2 * t2 * cpx1 + 3 * u2 * t2 * t2 * cpx2 + t2 * t2 * t2 * x2
-        const prevY =
-          u2 * u2 * u2 * y1 + 3 * u2 * u2 * t2 * cpy1 + 3 * u2 * t2 * t2 * cpy2 + t2 * t2 * t2 * y2
-        const angle = Math.atan2(tipY - prevY, tipX - prevX)
-        const arrowSize = 8
-
-        ctx.beginPath()
-        ctx.moveTo(tipX, tipY)
-        ctx.lineTo(
-          tipX - arrowSize * Math.cos(angle - Math.PI / 6),
-          tipY - arrowSize * Math.sin(angle - Math.PI / 6)
+        // Reset after all revealed
+        timeoutRef.current = setTimeout(
+          () => {
+            setPhase('done')
+            timeoutRef.current = setTimeout(() => {
+              setPhase('idle')
+              setConnections([])
+              setRevealedCount(0)
+            }, 3500)
+          },
+          PEOPLE.length * 400 + 800
         )
-        ctx.moveTo(tipX, tipY)
-        ctx.lineTo(
-          tipX - arrowSize * Math.cos(angle + Math.PI / 6),
-          tipY - arrowSize * Math.sin(angle + Math.PI / 6)
-        )
-        ctx.stroke()
       }
+    }, 80)
+  }, [phase, generateDerangement])
 
-      ctx.restore()
+  // Get position on a circle
+  const getPosition = (index: number, total: number, radius: number) => {
+    const angle = (index / total) * Math.PI * 2 - Math.PI / 2
+    return {
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
     }
+  }
 
-    const spawnParticles = (x: number, y: number, color: string, count: number) => {
-      const s = stateRef.current
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2
-        const speed = 1 + Math.random() * 3
-        s.particles.push({
-          x,
-          y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: 1,
-          color,
-          size: 2 + Math.random() * 3,
-        })
-      }
-    }
-
-    const frame = (ts: number) => {
-      const s = stateRef.current
-      s.time = ts / 1000
-
-      ctx.clearRect(0, 0, W, H)
-
-      const leftPos = getPositions('left')
-      const rightPos = getPositions('right')
-
-      const radius = Math.min(W * 0.04, 22)
-
-      // Column labels
-      ctx.save()
-      ctx.fillStyle = '#94a3b8'
-      ctx.font = `600 ${Math.max(10, radius * 0.5)}px Inter, system-ui, sans-serif`
-      ctx.textAlign = 'center'
-      ctx.fillText('Quien regala', leftPos[0]!.x, leftPos[0]!.y - radius - 20)
-      ctx.fillText('Quien recibe', rightPos[0]!.x, rightPos[0]!.y - radius - 20)
-      ctx.restore()
-
-      if (s.phase === 'idle') {
-        // Draw avatars with subtle float
-        leftPos.forEach((p, i) => {
-          const floatY = Math.sin(s.time * 1.5 + i * 0.8) * 2
-          drawAvatar(p.x, p.y + floatY, NAMES[i]!, COLORS[i]!, radius, 1, false)
-        })
-        rightPos.forEach((p, i) => {
-          const floatY = Math.sin(s.time * 1.5 + i * 0.8 + Math.PI) * 2
-          drawAvatar(p.x, p.y + floatY, NAMES[i]!, COLORS[i]!, radius, 1, false)
-        })
-
-        // Pulsing hint
-        if (!s.hovered) {
-          const pulse = 0.4 + Math.sin(s.time * 2) * 0.15
-          ctx.save()
-          ctx.fillStyle = `rgba(99, 102, 241, ${pulse})`
-          ctx.font = '500 13px Inter, system-ui, sans-serif'
-          ctx.textAlign = 'center'
-          ctx.fillText('Haz clic para sortear', W / 2, H * 0.92)
-          ctx.restore()
-        }
-      }
-
-      if (s.phase === 'shuffling') {
-        const elapsed = s.time - s.shuffleStart
-        const shuffleDuration = 1.8
-
-        // Left side stays
-        leftPos.forEach((p, i) => {
-          drawAvatar(p.x, p.y, NAMES[i]!, COLORS[i]!, radius, 1, false)
-        })
-
-        // Right side: names shuffle visually
-        if (elapsed < shuffleDuration) {
-          const speed = Math.max(0.05, 1 - elapsed / shuffleDuration)
-          const cycleTime = 0.08 + (1 - speed) * 0.15
-          const offset = Math.floor(elapsed / cycleTime) % NAMES.length
-
-          rightPos.forEach((p, i) => {
-            const shuffledIdx = (i + offset) % NAMES.length
-            const floatY = Math.sin(elapsed * 8 + i) * 4 * speed
-            drawAvatar(
-              p.x,
-              p.y + floatY,
-              NAMES[shuffledIdx]!,
-              COLORS[shuffledIdx]!,
-              radius,
-              1,
-              false
-            )
-          })
-        } else {
-          // Settle into final positions
-          const settleT = Math.min(1, (elapsed - shuffleDuration) / 0.4)
-          const eased = easeOut(settleT)
-
-          rightPos.forEach((p, i) => {
-            const targetIdx = s.assignments[i]!
-            const floatY = (1 - eased) * Math.sin(elapsed * 8 + i) * 2
-            drawAvatar(
-              p.x,
-              p.y + floatY,
-              NAMES[targetIdx]!,
-              COLORS[targetIdx]!,
-              radius,
-              1,
-              settleT > 0.8
-            )
-          })
-
-          if (settleT >= 1) {
-            s.phase = 'connecting'
-            s.connectStart = s.time
-            setPhase('connecting')
-          }
-        }
-      }
-
-      if (s.phase === 'connecting' || s.phase === 'done') {
-        const elapsed = s.time - s.connectStart
-        const stagger = 0.3
-        const lineDuration = 0.6
-
-        leftPos.forEach((p, i) => {
-          drawAvatar(p.x, p.y, NAMES[i]!, COLORS[i]!, radius, 1, true)
-        })
-
-        rightPos.forEach((p, i) => {
-          const targetIdx = s.assignments[i]!
-          drawAvatar(p.x, p.y, NAMES[targetIdx]!, COLORS[targetIdx]!, radius, 1, true)
-        })
-
-        // Draw connections with staggered animation
-        let allDone = true
-        leftPos.forEach((lp, i) => {
-          const targetIdx = s.assignments[i]!
-          const rp = rightPos[targetIdx]!
-          const lineElapsed = elapsed - i * stagger
-          const progress = Math.min(1, Math.max(0, lineElapsed / lineDuration))
-          const easedProgress = easeInOut(progress)
-
-          if (progress < 1) allDone = false
-
-          drawConnection(lp.x + radius, lp.y, rp.x - radius, rp.y, COLORS[i]!, easedProgress, 0.8)
-
-          // Spawn particles when connection completes
-          if (progress >= 0.99 && progress < 1.01 && lineElapsed < lineDuration + 0.02) {
-            spawnParticles(rp.x - radius, rp.y, COLORS[i]!, 12)
-          }
-        })
-
-        if (allDone && s.phase === 'connecting') {
-          s.phase = 'done'
-          setPhase('done')
-          // Reset after a pause
-          setTimeout(() => {
-            s.phase = 'idle'
-            s.particles = []
-            setPhase('idle')
-          }, 4000)
-        }
-      }
-
-      // Update & draw particles
-      s.particles = s.particles.filter((p) => p.life > 0)
-      s.particles.forEach((p) => {
-        p.x += p.vx
-        p.y += p.vy
-        p.vy += 0.05
-        p.vx *= 0.98
-        p.life -= 0.02
-        ctx.save()
-        ctx.globalAlpha = p.life
-        ctx.fillStyle = p.color
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
-      })
-
-      animRef.current = requestAnimationFrame(frame)
-    }
-
-    animRef.current = requestAnimationFrame(frame)
-
-    return () => {
-      cancelAnimationFrame(animRef.current)
-      window.removeEventListener('resize', resize)
-    }
-  }, [])
+  const radius = 140
+  const svgSize = radius * 2 + 100
 
   return (
-    <div
-      ref={containerRef}
-      className="relative mx-auto aspect-[16/10] w-full max-w-[560px] cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm select-none"
-      onClick={startDraw}
-      onMouseEnter={() => {
-        stateRef.current.hovered = true
-      }}
-      onMouseLeave={() => {
-        stateRef.current.hovered = false
-      }}
-      role="button"
-      aria-label="Iniciar sorteo de demostración"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') startDraw()
-      }}
-    >
-      <canvas ref={canvasRef} className="absolute inset-0" />
+    <div className="relative mx-auto w-full max-w-[420px] py-4" ref={containerRef}>
+      {/* SVG for connections */}
+      <div className="relative" style={{ width: svgSize, height: svgSize, margin: '0 auto' }}>
+        <svg
+          viewBox={`${-svgSize / 2} ${-svgSize / 2} ${svgSize} ${svgSize}`}
+          className="absolute inset-0 h-full w-full"
+          style={{ overflow: 'visible' }}
+        >
+          <defs>
+            {connections.map((conn, i) => (
+              <linearGradient
+                key={`grad-${i}`}
+                id={`conn-grad-${i}`}
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
+                <stop offset="0%" stopColor={conn.color} stopOpacity="0.8" />
+                <stop offset="100%" stopColor={PEOPLE[conn.to]!.color} stopOpacity="0.8" />
+              </linearGradient>
+            ))}
+          </defs>
+
+          {/* Connection lines */}
+          <AnimatePresence>
+            {connections.map((conn, i) => {
+              const from = getPosition(conn.from, PEOPLE.length, radius)
+              const to = getPosition(conn.to, PEOPLE.length, radius)
+
+              // Curved path through center-ish
+              const mx = (from.x + to.x) * 0.15
+              const my = (from.y + to.y) * 0.15
+              const path = `M ${from.x} ${from.y} Q ${mx} ${my} ${to.x} ${to.y}`
+
+              return (
+                <motion.g key={`conn-${conn.from}-${conn.to}`}>
+                  {/* Glow */}
+                  <motion.path
+                    d={path}
+                    fill="none"
+                    stroke={conn.color}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    opacity="0.15"
+                    filter="blur(4px)"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                  />
+                  {/* Main line */}
+                  <motion.path
+                    d={path}
+                    fill="none"
+                    stroke={`url(#conn-grad-${i})`}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                  />
+                  {/* Arrow dot at end */}
+                  <motion.circle
+                    cx={to.x}
+                    cy={to.y}
+                    r="4"
+                    fill={PEOPLE[conn.to]!.color}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 0.6 }}
+                    transition={{ delay: 0.4, duration: 0.2 }}
+                  />
+                </motion.g>
+              )
+            })}
+          </AnimatePresence>
+        </svg>
+
+        {/* Avatars in a circle */}
+        {PEOPLE.map((person, i) => {
+          const pos = getPosition(i, PEOPLE.length, radius)
+          const isRevealed =
+            phase === 'revealing' || phase === 'done'
+              ? connections.some((c) => c.from === i || c.to === i)
+              : false
+
+          // During shuffle, show shuffled names
+          const displayIdx = phase === 'shuffling' ? (i + shuffleOffset) % PEOPLE.length : i
+          const displayPerson = phase === 'shuffling' ? PEOPLE[displayIdx]! : person
+
+          return (
+            <motion.div
+              key={person.name}
+              className="absolute flex flex-col items-center gap-1"
+              style={{
+                left: svgSize / 2 + pos.x,
+                top: svgSize / 2 + pos.y,
+                transform: 'translate(-50%, -50%)',
+              }}
+              animate={
+                phase === 'shuffling'
+                  ? { scale: [1, 1.05, 1], y: [0, -3, 0] }
+                  : isRevealed
+                    ? { scale: [1, 1.15, 1] }
+                    : {}
+              }
+              transition={
+                phase === 'shuffling' ? { duration: 0.15, repeat: Infinity } : { duration: 0.3 }
+              }
+            >
+              <div
+                className="relative flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold text-white shadow-md transition-shadow duration-300"
+                style={{
+                  backgroundColor: displayPerson.color,
+                  boxShadow: isRevealed
+                    ? `0 0 20px ${displayPerson.color}60, 0 4px 12px rgba(0,0,0,0.1)`
+                    : '0 2px 8px rgba(0,0,0,0.1)',
+                }}
+              >
+                {displayPerson.name[0]}
+              </div>
+              <span
+                className="text-xs font-medium transition-colors duration-300"
+                style={{
+                  color: isRevealed ? displayPerson.color : '#64748b',
+                }}
+              >
+                {displayPerson.name}
+              </span>
+            </motion.div>
+          )
+        })}
+
+        {/* Center button */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ zIndex: 10 }}
+        >
+          <AnimatePresence mode="wait">
+            {(phase === 'idle' || phase === 'done') && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Button
+                  onClick={startDraw}
+                  className="h-14 w-14 rounded-full bg-indigo-600 p-0 shadow-lg shadow-indigo-200/50 hover:bg-indigo-700 hover:shadow-indigo-300/50"
+                  aria-label="Sortear"
+                >
+                  <Shuffle className="h-5 w-5" />
+                </Button>
+              </motion.div>
+            )}
+
+            {phase === 'shuffling' && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, rotate: 360 }}
+                transition={{ rotate: { duration: 1, repeat: Infinity, ease: 'linear' } }}
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100"
+              >
+                <Shuffle className="h-5 w-5 text-indigo-600" />
+              </motion.div>
+            )}
+
+            {phase === 'revealing' && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50"
+              >
+                <span className="text-lg font-bold text-indigo-600">
+                  {revealedCount}/{PEOPLE.length}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Caption */}
+      <p className="mt-2 text-center text-xs text-slate-400">
+        {phase === 'idle' && 'Presiona para ver el sorteo en acción'}
+        {phase === 'shuffling' && 'Mezclando...'}
+        {phase === 'revealing' && 'Asignando amigos secretos...'}
+        {phase === 'done' && 'Nadie se regala a sí mismo. Así de simple.'}
+      </p>
     </div>
   )
 }
