@@ -7,6 +7,7 @@ import { AnimatedFeatures } from '@/components/animated-features'
 import { SectionAurora } from '@/components/section-aurora'
 import { InteractiveDraw } from '@/components/interactive-draw'
 import { PrivacyDemo } from '@/components/privacy-demo'
+import { GhostScrollGuide } from '@/components/ghost-scroll-guide'
 import { Ghost, Calendar, Share2, Shuffle, Users, Star } from 'lucide-react'
 
 const jsonLd = {
@@ -74,6 +75,7 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      <GhostScrollGuide />
       <LandingHeader />
 
       <main className="flex-1" role="main">
