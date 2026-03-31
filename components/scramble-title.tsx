@@ -1,77 +1,132 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 const TARGET = 'Amigo Secreto'
-const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+const LETTERS = TARGET.split('')
+
+function derangement(): number[] {
+  const n = LETTERS.length
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const perm = Array.from({ length: n }, (_, i) => i)
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[perm[i], perm[j]] = [perm[j]!, perm[i]!]
+    }
+    if (perm.every((v, i) => LETTERS[i] === ' ' || v !== i)) return perm
+  }
+  return Array.from({ length: n }, (_, i) => (i + 3) % n)
+}
 
 export function ScrambleTitle() {
-  const [display, setDisplay] = useState(TARGET)
-  const [resolved, setResolved] = useState(false)
+  const containerRef = useRef<HTMLSpanElement>(null)
+  const slotsRef = useRef<(HTMLSpanElement | null)[]>([])
+  const charsRef = useRef<(HTMLSpanElement | null)[]>([])
+  const [ready, setReady] = useState(false)
+  const [shuffled, setShuffled] = useState(true)
+  const orderRef = useRef<number[]>(derangement())
   const hasRun = useRef(false)
 
+  // Measure slot positions and position characters
+  const positionChars = useCallback(() => {
+    const slots = slotsRef.current
+    const chars = charsRef.current
+    const container = containerRef.current
+    if (!container) return
+
+    const containerRect = container.getBoundingClientRect()
+    const order = orderRef.current
+
+    // Position each character at its assigned slot
+    LETTERS.forEach((_, charIdx) => {
+      const charEl = chars[charIdx]
+      if (!charEl || LETTERS[charIdx] === ' ') return
+
+      // This character should be in slot order[charIdx] (when shuffled)
+      // or in slot charIdx (when resolved)
+      const targetSlot = shuffled ? order.indexOf(charIdx) : charIdx
+      const slotEl = slots[targetSlot]
+      if (!slotEl) return
+
+      const slotRect = slotEl.getBoundingClientRect()
+      const x = slotRect.left - containerRect.left
+
+      charEl.style.transition = shuffled
+        ? 'none'
+        : `transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) ${charIdx * 30}ms, opacity 0.3s`
+      charEl.style.transform = `translateX(${x}px)`
+      charEl.style.opacity = shuffled ? '0.55' : '1'
+    })
+  }, [shuffled])
+
   useEffect(() => {
-    if (hasRun.current) return
+    // Measure initial positions
+    requestAnimationFrame(() => {
+      setReady(true)
+      positionChars()
+    })
+  }, [positionChars])
+
+  useEffect(() => {
+    if (!ready || hasRun.current) return
     hasRun.current = true
 
-    const letters = TARGET.split('')
-    const locked = new Array(letters.length).fill(false)
-    let frame = 0
-    const totalFrames = 45 // ~1.5s at 30fps
-    const staggerPerChar = 3 // frames between each char locking
+    // After a pause, resolve
+    const timer = setTimeout(() => {
+      setShuffled(false)
+    }, 900)
 
-    const interval = setInterval(() => {
-      frame++
+    return () => clearTimeout(timer)
+  }, [ready])
 
-      const result = letters.map((char, i) => {
-        if (char === ' ') return ' '
-        if (locked[i]) return char
+  useEffect(() => {
+    if (ready) positionChars()
+  }, [shuffled, ready, positionChars])
 
-        // Each character locks in sequence with stagger
-        const lockFrame = 8 + i * staggerPerChar
-        if (frame >= lockFrame) {
-          locked[i] = true
-          return char
-        }
-
-        // Random character while not locked
-        return CHARS[Math.floor(Math.random() * CHARS.length)]!
-      })
-
-      setDisplay(result.join(''))
-
-      if (locked.every(Boolean)) {
-        clearInterval(interval)
-        setResolved(true)
-      }
-    }, 33)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  // Split display into characters for individual styling
-  const spaceIdx = TARGET.indexOf(' ')
+  // Re-measure on resize
+  useEffect(() => {
+    const onResize = () => positionChars()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [positionChars])
 
   return (
-    <span className="text-indigo-600">
-      {display.split('').map((char, i) => {
-        const isLocked = resolved || char === TARGET[i]
-        const isSpace = i === spaceIdx
+    <span
+      ref={containerRef}
+      className="relative inline-block text-indigo-600"
+      aria-label="Amigo Secreto"
+    >
+      {/* Invisible slots that define the natural text layout */}
+      {LETTERS.map((letter, i) => (
+        <span
+          key={`slot-${i}`}
+          ref={(el) => {
+            slotsRef.current[i] = el
+          }}
+          className="invisible"
+          aria-hidden="true"
+        >
+          {letter}
+        </span>
+      ))}
 
-        if (isSpace) return <span key={i}> </span>
-
+      {/* Animated characters positioned absolutely over slots */}
+      {LETTERS.map((letter, i) => {
+        if (letter === ' ') return null
         return (
           <span
-            key={i}
-            className="inline-block transition-all duration-150"
-            style={{
-              opacity: isLocked ? 1 : 0.6,
-              filter: isLocked ? 'none' : 'blur(0.5px)',
-              transform: isLocked ? 'none' : `translateY(${Math.sin(i * 2) * 1}px)`,
-              fontFamily: isLocked ? 'inherit' : 'monospace',
+            key={`char-${i}`}
+            ref={(el) => {
+              charsRef.current[i] = el
             }}
+            className="absolute top-0 left-0"
+            style={{
+              willChange: 'transform',
+              opacity: ready ? undefined : 0,
+            }}
+            aria-hidden="true"
           >
-            {char}
+            {letter}
           </span>
         )
       })}
