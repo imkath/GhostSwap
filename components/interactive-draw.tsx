@@ -21,7 +21,7 @@ interface Connection {
 
 export function InteractiveDraw() {
   const [phase, setPhase] = useState<'idle' | 'shuffling' | 'revealing' | 'done'>('idle')
-  const [assignments, setAssignments] = useState<number[]>([])
+  const [, setAssignments] = useState<number[]>([])
   const [revealedCount, setRevealedCount] = useState(0)
   const [connections, setConnections] = useState<Connection[]>([])
   const [shuffleOffset, setShuffleOffset] = useState(0)

@@ -90,10 +90,6 @@ export function AnonymousChat({ matchId, groupId, role, receiverName }: Anonymou
   }
 
   const hasMessages = messages.length > 0
-  const unreadCount =
-    role === 'receiver'
-      ? messages.filter((m) => m.sender_role === 'giver').length
-      : messages.filter((m) => m.sender_role === 'receiver').length
 
   return (
     <Card className="border-slate-200">

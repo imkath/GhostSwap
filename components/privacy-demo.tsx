@@ -153,11 +153,10 @@ export function PrivacyDemo() {
       ctx.restore()
     }
 
-    const drawCard = (card: Card, isOwner: boolean, t: number) => {
+    const drawCard = (card: Card, isOwner: boolean, _t: number) => {
       ctx.save()
 
       const cx = card.x + card.w / 2 + card.shakeX
-      const cy = card.y + card.h / 2 + card.shakeY
 
       // Card shadow
       ctx.shadowColor = 'rgba(0,0,0,0.08)'

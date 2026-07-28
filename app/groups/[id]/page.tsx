@@ -39,7 +39,6 @@ import {
   RotateCcw,
   AlertTriangle,
   ExternalLink,
-  MessageCircle,
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
