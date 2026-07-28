@@ -4,9 +4,37 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
+  # La suite corre antes del deploy: si algo falla, no se publica nada.
+  test:
+    runs-on: ubuntu-latest
+    name: Test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test:run
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     name: Deploy
     environment:
@@ -26,7 +54,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Las variables NEXT_PUBLIC_* se incrustan en el bundle durante el build,
+      # no se leen en ejecucion. Si faltan aca, el sitio se publica sin poder
+      # conectarse a Supabase, aunque esten configuradas en Cloudflare.
       - name: Build for Cloudflare
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: npm run build:cloudflare
 
       - name: Deploy to Cloudflare Workers
