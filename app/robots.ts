@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/auth/', '/dashboard', '/groups/'],
       },
     ],
-    sitemap: 'https://ghostswap.kthcsk.me/sitemap.xml',
+    sitemap: 'https://ghostswap.nvrkth.com/sitemap.xml',
   }
 }

@@ -16,7 +16,7 @@ const jsonLd = {
   name: 'GhostSwap',
   description:
     'Organiza tu Amigo Secreto o intercambio de regalos online gratis con sorteos automáticos y listas de deseos.',
-  url: 'https://ghostswap.kthcsk.me',
+  url: 'https://ghostswap.nvrkth.com',
   applicationCategory: 'EntertainmentApplication',
   operatingSystem: 'Web',
   offers: {

@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ghostswap.kthcsk.me'),
+  metadataBase: new URL('https://ghostswap.nvrkth.com'),
   title: {
     default: 'GhostSwap - Organiza tu Amigo Secreto Online Gratis',
     template: '%s | GhostSwap',
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_ES',
-    url: 'https://ghostswap.kthcsk.me',
+    url: 'https://ghostswap.nvrkth.com',
     siteName: 'GhostSwap',
     title: 'GhostSwap - Organiza tu Amigo Secreto Online Gratis',
     description:
@@ -83,9 +83,9 @@ export const metadata: Metadata = {
     creator: '@ghostswap',
   },
   alternates: {
-    canonical: 'https://ghostswap.kthcsk.me',
+    canonical: 'https://ghostswap.nvrkth.com',
     languages: {
-      es: 'https://ghostswap.kthcsk.me',
+      es: 'https://ghostswap.nvrkth.com',
     },
   },
   category: 'technology',

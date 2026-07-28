@@ -42,7 +42,7 @@
 
 ## 🚀 Demo
 
-👉 **[ghostswap.kthcsk.me](https://ghostswap.kthcsk.me)**
+👉 **[ghostswap.nvrkth.com](https://ghostswap.nvrkth.com)**
 
 ---
 

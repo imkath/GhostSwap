@@ -15,7 +15,7 @@ async function testBrevoEmail() {
 
   const user = process.env.BREVO_SMTP_USER
   const pass = process.env.BREVO_SMTP_KEY
-  const from = process.env.EMAIL_FROM || 'GhostSwap <hello@kthcsk.me>'
+  const from = process.env.EMAIL_FROM || 'GhostSwap <hello@nvrkth.com>'
 
   if (!user || !pass) {
     console.error('Brevo SMTP credentials not configured.')
@@ -39,7 +39,7 @@ async function testBrevoEmail() {
     },
   })
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ghostswap.kthcsk.me'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ghostswap.nvrkth.com'
   const groupUrl = `${appUrl}/groups/test-group-id`
 
   try {

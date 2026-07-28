@@ -35,14 +35,14 @@ export async function sendDrawNotification({
   groupName,
   groupId,
 }: DrawNotificationParams) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ghostswap.kthcsk.me'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ghostswap.nvrkth.com'
   const groupUrl = `${appUrl}/groups/${groupId}`
 
   try {
     const transporter = createTransporter()
 
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || 'GhostSwap <hello@kthcsk.me>',
+      from: process.env.EMAIL_FROM || 'GhostSwap <hello@nvrkth.com>',
       to,
       subject: `${groupName} - ¡El sorteo ya se realizó!`,
       html: getEmailTemplate({ recipientName, groupName, groupUrl }),

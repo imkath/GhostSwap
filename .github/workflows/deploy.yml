@@ -11,7 +11,7 @@ jobs:
     name: Deploy
     environment:
       name: production
-      url: https://ghostswap.kthcsk.me
+      url: https://ghostswap.nvrkth.com
 
     steps:
       - name: Checkout
