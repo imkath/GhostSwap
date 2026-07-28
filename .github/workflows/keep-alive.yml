@@ -1,0 +1,57 @@
+name: Keep Supabase alive
+
+# El plan gratuito de Supabase pausa un proyecto tras ~7 dias sin actividad.
+# Cuando eso pasa, el sitio queda caido hasta reanudarlo a mano desde el panel.
+# Este workflow hace una consulta trivial cada 3 dias para que el proyecto
+# cuente como activo.
+#
+# Requiere dos secrets del repositorio (Settings > Secrets and variables > Actions):
+#   SUPABASE_URL       -> https://<ref>.supabase.co
+#   SUPABASE_ANON_KEY  -> la clave anon (publica por diseno, nunca la service_role)
+#
+# Nota de seguridad: este workflow no lee ningun dato del evento que lo dispara
+# (titulos, mensajes de commit, etc.), por lo que no es vulnerable a inyeccion.
+# Los unicos valores interpolados son secrets, y se pasan por env, no inline.
+
+on:
+  schedule:
+    # 09:00 UTC cada 3 dias
+    - cron: '0 9 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consultar la base para registrar actividad
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "Faltan los secrets SUPABASE_URL o SUPABASE_ANON_KEY."
+            exit 1
+          fi
+
+          # Se consulta 'groups' con limit=0: no devuelve filas ni datos de
+          # nadie, pero obliga a la base a responder. RLS sigue aplicando.
+          status="$(curl -s -o /tmp/body.txt -w '%{http_code}' --max-time 30 \
+            "${SUPABASE_URL}/rest/v1/groups?select=id&limit=0" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")"
+
+          echo "HTTP ${status}"
+
+          if [ "${status}" != "200" ]; then
+            echo "La base no respondio correctamente. Puede estar pausada."
+            cat /tmp/body.txt
+            exit 1
+          fi
+
+          echo "Proyecto activo."
