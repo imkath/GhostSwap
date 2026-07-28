@@ -4,7 +4,7 @@ import {
   groupIdSchema,
   memberIdSchema,
   wishlistItemSchema,
-  updateWishlistSchema
+  updateWishlistSchema,
 } from '../validations'
 
 describe('groupIdSchema', () => {
@@ -76,11 +76,24 @@ describe('updateGroupSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('accepts valid datetime for exchange_date', () => {
+  it('accepts date-only format for exchange_date', () => {
     const result = updateGroupSchema.safeParse({
-      exchange_date: '2024-12-25T10:00:00.000Z'
+      exchange_date: '2024-12-25',
     })
     expect(result.success).toBe(true)
+  })
+
+  it('rejects datetime with time for exchange_date', () => {
+    const result = updateGroupSchema.safeParse({
+      exchange_date: '2024-12-25T10:00:00.000Z',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('converts empty string to null for exchange_date', () => {
+    const result = updateGroupSchema.safeParse({ exchange_date: '' })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.exchange_date).toBeNull()
   })
 
   it('accepts null exchange_date', () => {
@@ -149,10 +162,7 @@ describe('wishlistItemSchema', () => {
 
 describe('updateWishlistSchema', () => {
   it('accepts valid wishlist array', () => {
-    const result = updateWishlistSchema.safeParse([
-      { name: 'Item 1' },
-      { name: 'Item 2' },
-    ])
+    const result = updateWishlistSchema.safeParse([{ name: 'Item 1' }, { name: 'Item 2' }])
     expect(result.success).toBe(true)
   })
 
