@@ -10,7 +10,7 @@
   },
   "routes": [
     {
-      "pattern": "ghostswap.nvrkth.me",
+      "pattern": "ghostswap.nvrkth.com",
       "custom_domain": true
     }
   ]
