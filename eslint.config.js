@@ -57,6 +57,10 @@ export default tseslint.config(
       '*.config.js',
       '*.config.ts',
       '*.config.mjs',
+      // Configuración de Lighthouse CI: es CommonJS y corre en Node,
+      // no bajo el parser de la app.
+      'lighthouserc.js',
+      'coverage/',
     ],
   }
 )
