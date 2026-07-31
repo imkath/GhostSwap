@@ -2,8 +2,7 @@
 
 **Organiza tu Amigo Secreto o intercambio de regalos online gratis con sorteos automáticos y listas de deseos.**
 
-[![Tests](https://img.shields.io/badge/tests-163%20passing-success)](https://github.com/imkath/GhostSwap)
-[![Coverage](https://img.shields.io/badge/coverage-77%25-yellow)](https://github.com/imkath/GhostSwap)
+[![Deploy](https://github.com/imkath/GhostSwap/actions/workflows/deploy.yml/badge.svg)](https://github.com/imkath/GhostSwap/actions/workflows/deploy.yml)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com/)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-orange)](https://workers.cloudflare.com/)
@@ -90,7 +89,7 @@
 
 - **Framework:** Vitest
 - **Testing Library:** React Testing Library
-- **Coverage:** 77% (163 tests passing)
+- **Enfoque:** la lógica del sorteo se verifica con property-based testing y pruebas de estrés
 
 ---
 
@@ -190,12 +189,17 @@ npm run test:ui
 npm run test:coverage
 ```
 
-### Test Stats
+### Qué se prueba
 
-- ✅ **163 tests** passing
-- ✅ **14 test files**
-- ✅ **77% coverage** (lib + hooks)
-- ✅ **5,000+ iterations** de tests de estrés
+El foco está en el algoritmo de sorteo, que es donde un error rompe el producto:
+que nadie se saque a sí mismo, que se respeten las exclusiones y que el resultado
+no sea predecible.
+
+- **Derangement:** property-based testing sobre miles de iteraciones, verificando
+  que ninguna asignación sea un punto fijo
+- **Exclusiones:** casos límite donde las restricciones hacen imposible el sorteo
+- **Códigos de invitación:** unicidad y resistencia a manipulación de la URL
+- **Validación:** los esquemas que protegen la escritura en base de datos
 
 ---
 
