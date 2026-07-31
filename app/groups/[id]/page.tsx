@@ -41,7 +41,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { drawNames, resetDraw } from '@/app/actions/draw'
@@ -146,44 +146,7 @@ export default function GroupPage() {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
 
-  useEffect(() => {
-    fetchGroupData()
-  }, [groupId])
-
-  // Real-time subscription to group changes
-  useEffect(() => {
-    const supabase = createClient()
-
-    // Subscribe to changes in the group's status
-    const channel = supabase
-      .channel(`group-${groupId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'groups',
-          filter: `id=eq.${groupId}`,
-        },
-        (payload) => {
-          // When group is updated (e.g., status changed to DRAWN), refresh data
-          const newGroup = payload.new as Group
-          if (newGroup.status !== group?.status) {
-            fetchGroupData()
-            if (newGroup.status === 'DRAWN') {
-              toast.success('¡El sorteo ha sido realizado!')
-            }
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [groupId, group?.status])
-
-  const fetchGroupData = async () => {
+  const fetchGroupData = useCallback(async () => {
     const supabase = createClient()
 
     try {
@@ -295,7 +258,46 @@ export default function GroupPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [groupId, router])
+
+  useEffect(() => {
+    fetchGroupData()
+  }, [fetchGroupData])
+
+  // Real-time subscription to group changes
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Subscribe to changes in the group's status
+    const channel = supabase
+      .channel(`group-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'groups',
+          filter: `id=eq.${groupId}`,
+        },
+        (payload) => {
+          // When group is updated (e.g., status changed to DRAWN), refresh data
+          const newGroup = payload.new as Group
+          if (newGroup.status !== group?.status) {
+            fetchGroupData()
+            if (newGroup.status === 'DRAWN') {
+              toast.success('¡El sorteo ha sido realizado!')
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+    // fetchGroupData es estable mientras no cambie el grupo, así que incluirla
+    // no provoca resuscripciones extra al canal de realtime.
+  }, [groupId, group?.status, fetchGroupData])
 
   const handleDraw = async () => {
     if (!group) return

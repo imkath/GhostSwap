@@ -5,9 +5,7 @@ describe('Derangement with Exclusions', () => {
   describe('Basic exclusion functionality', () => {
     it('should respect single exclusion', () => {
       const participants = ['A', 'B', 'C', 'D']
-      const exclusions: ExclusionMap = new Map([
-        ['A', new Set(['B'])]
-      ])
+      const exclusions: ExclusionMap = new Map([['A', new Set(['B'])]])
 
       const result = generateDerangement(participants, exclusions)
 
@@ -21,9 +19,7 @@ describe('Derangement with Exclusions', () => {
 
     it('should respect multiple exclusions for one person', () => {
       const participants = ['A', 'B', 'C', 'D', 'E']
-      const exclusions: ExclusionMap = new Map([
-        ['A', new Set(['B', 'C'])]
-      ])
+      const exclusions: ExclusionMap = new Map([['A', new Set(['B', 'C'])]])
 
       for (let i = 0; i < 50; i++) {
         const result = generateDerangement(participants, exclusions)
@@ -107,18 +103,7 @@ describe('Derangement with Exclusions', () => {
 
   describe('Edge cases with exclusions', () => {
     it('should return null for impossible constraints', () => {
-      // A can only give to B, but B cannot receive (too constrained)
-      const participants = ['A', 'B', 'C']
-      const exclusions: ExclusionMap = new Map([
-        ['A', new Set(['C'])], // A cannot give to C
-        ['C', new Set(['B'])], // C cannot give to B
-        ['B', new Set(['C'])], // B cannot give to C
-      ])
-      // This creates: A -> B, B -> ?, C -> A
-      // But B can only give to A, and A is already taken by C
-      // Actually this might still work: A -> B, B -> A? No, B->A would mean A gives and receives from B
-      // Let's make it truly impossible
-
+      // A no puede regalarle a nadie, así que no existe derangement posible.
       const impossibleParticipants = ['A', 'B', 'C']
       const impossibleExclusions: ExclusionMap = new Map([
         ['A', new Set(['B', 'C'])], // A can give to no one
@@ -197,14 +182,14 @@ describe('Derangement with Exclusions', () => {
   describe('Complex real-world scenarios', () => {
     it('should handle family event with multiple couples', () => {
       const participants = [
-        'Alice',   // with Bob
-        'Bob',     // with Alice
+        'Alice', // with Bob
+        'Bob', // with Alice
         'Charlie', // with Diana
-        'Diana',   // with Charlie
-        'Eve',     // with Frank
-        'Frank',   // with Eve
-        'Grace',   // single
-        'Henry',   // single
+        'Diana', // with Charlie
+        'Eve', // with Frank
+        'Frank', // with Eve
+        'Grace', // single
+        'Henry', // single
       ]
 
       const exclusions: ExclusionMap = new Map([
@@ -299,13 +284,13 @@ describe('Derangement with Exclusions', () => {
       ])
 
       const receiverCounts = new Map<string, number>()
-      participants.forEach(p => receiverCounts.set(p, 0))
+      participants.forEach((p) => receiverCounts.set(p, 0))
 
       const iterations = 1000
       for (let i = 0; i < iterations; i++) {
         const result = generateDerangement(participants, exclusions)
         if (result) {
-          result.forEach(receiver => {
+          result.forEach((receiver) => {
             receiverCounts.set(receiver, receiverCounts.get(receiver)! + 1)
           })
         }
@@ -316,7 +301,7 @@ describe('Derangement with Exclusions', () => {
       const expectedCount = iterations
       const tolerance = iterations * 0.3 // 30% tolerance
 
-      for (const [person, count] of receiverCounts) {
+      for (const [, count] of receiverCounts) {
         expect(count).toBeGreaterThan(expectedCount - tolerance)
         expect(count).toBeLessThan(expectedCount + tolerance)
       }

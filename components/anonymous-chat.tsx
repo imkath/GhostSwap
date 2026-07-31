@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { MessageCircle, Send, Loader2, Ghost } from 'lucide-react'
@@ -31,17 +31,9 @@ export function AnonymousChat({ matchId, groupId, role, receiverName }: Anonymou
   const [resolvedMatchId, setResolvedMatchId] = useState<string | null>(matchId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    loadMessages()
-  }, [matchId, groupId, role])
-
-  useEffect(() => {
-    if (isExpanded) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [messages, isExpanded])
-
-  const loadMessages = async () => {
+  // Las tres dependencias son las que determinan qué mensajes se piden:
+  // quién eres en el intercambio y de qué grupo o emparejamiento.
+  const loadMessages = useCallback(async () => {
     setIsLoading(true)
 
     if (role === 'giver' && matchId) {
@@ -59,7 +51,17 @@ export function AnonymousChat({ matchId, groupId, role, receiverName }: Anonymou
     }
 
     setIsLoading(false)
-  }
+  }, [matchId, groupId, role])
+
+  useEffect(() => {
+    loadMessages()
+  }, [loadMessages])
+
+  useEffect(() => {
+    if (isExpanded) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages, isExpanded])
 
   const handleSend = async () => {
     if (!newMessage.trim() || !resolvedMatchId) return
