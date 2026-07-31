@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AppHeader } from '@/components/app-header'
 import { Ghost, Loader2, ArrowLeft, Users, Calendar, CheckCircle } from 'lucide-react'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
@@ -38,6 +38,97 @@ function JoinGroupContent() {
   const [groupPreview, setGroupPreview] = useState<GroupPreview | null>(null)
   const [joined, setJoined] = useState(false)
 
+  const autoJoinGroup = useCallback(
+    async (code: string, userId: string) => {
+      setIsLoading(true)
+      const supabase = createClient()
+
+      try {
+        // Find group by invite code
+        const { data: groupData } = await supabase.rpc('get_group_by_invite_code', { code })
+
+        if (!groupData || groupData.length === 0) {
+          setIsLoading(false)
+          return // Invalid code, let user try manually
+        }
+
+        const group = groupData[0]
+
+        // Check if already a member
+        const { data: existingMember } = await supabase
+          .from('members')
+          .select('id')
+          .eq('group_id', group.id)
+          .eq('user_id', userId)
+          .single()
+
+        if (existingMember) {
+          // Already a member, redirect to group
+          router.push(`/groups/${group.id}`)
+          return
+        }
+
+        // Check if group is already drawn
+        if (group.status === 'DRAWN') {
+          setError('Este grupo ya realizó su sorteo y no acepta nuevos miembros')
+          setIsLoading(false)
+          return
+        }
+
+        // Add user as member
+        const { error: joinError } = await supabase.from('members').insert({
+          group_id: group.id,
+          user_id: userId,
+          is_admin: false,
+        })
+
+        if (joinError) {
+          setError(joinError.message)
+          setIsLoading(false)
+          return
+        }
+
+        // Get user profile for activity message
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', userId)
+          .single()
+
+        // Log activity
+        await supabase.from('activities').insert({
+          group_id: group.id,
+          user_id: userId,
+          type: 'USER_JOINED',
+          message: `${profile?.full_name || 'Alguien'} se unió al grupo`,
+        })
+
+        setJoined(true)
+        setTimeout(() => {
+          router.push(`/groups/${group.id}`)
+        }, 1500)
+      } catch {
+        setIsLoading(false)
+      }
+    },
+    [router]
+  )
+
+  const fetchGroupPreview = useCallback(async (code: string) => {
+    const supabase = createClient()
+
+    const { data, error } = await supabase.rpc('get_group_by_invite_code', { code })
+
+    if (!error && data && data.length > 0) {
+      setGroupPreview({
+        id: data[0].id,
+        name: data[0].name,
+        exchange_date: data[0].exchange_date,
+        member_count: data[0].member_count,
+      })
+    }
+  }, [])
+
   useEffect(() => {
     const rawCode = searchParams.get('code')
     const code = rawCode ? extractInviteCode(rawCode) : null
@@ -66,95 +157,7 @@ function JoinGroupContent() {
       }
     }
     checkAuthAndAutoJoin()
-  }, [searchParams, router])
-
-  const autoJoinGroup = async (code: string, userId: string) => {
-    setIsLoading(true)
-    const supabase = createClient()
-
-    try {
-      // Find group by invite code
-      const { data: groupData } = await supabase.rpc('get_group_by_invite_code', { code })
-
-      if (!groupData || groupData.length === 0) {
-        setIsLoading(false)
-        return // Invalid code, let user try manually
-      }
-
-      const group = groupData[0]
-
-      // Check if already a member
-      const { data: existingMember } = await supabase
-        .from('members')
-        .select('id')
-        .eq('group_id', group.id)
-        .eq('user_id', userId)
-        .single()
-
-      if (existingMember) {
-        // Already a member, redirect to group
-        router.push(`/groups/${group.id}`)
-        return
-      }
-
-      // Check if group is already drawn
-      if (group.status === 'DRAWN') {
-        setError('Este grupo ya realizó su sorteo y no acepta nuevos miembros')
-        setIsLoading(false)
-        return
-      }
-
-      // Add user as member
-      const { error: joinError } = await supabase.from('members').insert({
-        group_id: group.id,
-        user_id: userId,
-        is_admin: false,
-      })
-
-      if (joinError) {
-        setError(joinError.message)
-        setIsLoading(false)
-        return
-      }
-
-      // Get user profile for activity message
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', userId)
-        .single()
-
-      // Log activity
-      await supabase.from('activities').insert({
-        group_id: group.id,
-        user_id: userId,
-        type: 'USER_JOINED',
-        message: `${profile?.full_name || 'Alguien'} se unió al grupo`,
-      })
-
-      setJoined(true)
-      setTimeout(() => {
-        router.push(`/groups/${group.id}`)
-      }, 1500)
-    } catch {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchGroupPreview = async (code: string) => {
-    const supabase = createClient()
-
-    const { data, error } = await supabase.rpc('get_group_by_invite_code', { code })
-
-    if (!error && data && data.length > 0) {
-      setGroupPreview({
-        id: data[0].id,
-        name: data[0].name,
-        exchange_date: data[0].exchange_date,
-        member_count: data[0].member_count,
-      })
-    }
-  }
+  }, [searchParams, router, autoJoinGroup, fetchGroupPreview])
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault()

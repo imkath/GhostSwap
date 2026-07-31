@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -56,13 +56,9 @@ export function ExclusionsManager({ groupId, members, isAdmin, isDrawn }: Exclus
   const [isLoading, setIsLoading] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
 
-  useEffect(() => {
-    if (showDialog) {
-      loadExclusions()
-    }
-  }, [showDialog])
-
-  const loadExclusions = async () => {
+  // Se memoiza con groupId como dependencia: sin esto el efecto de abajo
+  // conservaría una versión antigua de la función si el grupo cambiara.
+  const loadExclusions = useCallback(async () => {
     setIsLoading(true)
     const result = await getExclusions(groupId)
     if (result.success && result.exclusions) {
@@ -71,7 +67,13 @@ export function ExclusionsManager({ groupId, members, isAdmin, isDrawn }: Exclus
       toast.error(result.error || 'Error al cargar restricciones')
     }
     setIsLoading(false)
-  }
+  }, [groupId])
+
+  useEffect(() => {
+    if (showDialog) {
+      loadExclusions()
+    }
+  }, [showDialog, loadExclusions])
 
   const handleAddExclusion = async () => {
     if (!selectedGiver || !selectedExcluded) {

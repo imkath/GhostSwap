@@ -15,12 +15,13 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
-const actionTypes = {
-  ADD_TOAST: 'ADD_TOAST',
-  UPDATE_TOAST: 'UPDATE_TOAST',
-  DISMISS_TOAST: 'DISMISS_TOAST',
-  REMOVE_TOAST: 'REMOVE_TOAST',
-} as const
+// Solo se usa como tipo, nunca como valor, así que se declara como tipo.
+type ActionTypes = {
+  ADD_TOAST: 'ADD_TOAST'
+  UPDATE_TOAST: 'UPDATE_TOAST'
+  DISMISS_TOAST: 'DISMISS_TOAST'
+  REMOVE_TOAST: 'REMOVE_TOAST'
+}
 
 let count = 0
 
@@ -29,7 +30,7 @@ function genId() {
   return count.toString()
 }
 
-type ActionType = typeof actionTypes
+type ActionType = ActionTypes
 
 type Action =
   | {
@@ -82,9 +83,7 @@ export const reducer = (state: State, action: Action): State => {
     case 'UPDATE_TOAST':
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t,
-        ),
+        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
       }
 
     case 'DISMISS_TOAST': {
@@ -108,7 +107,7 @@ export const reducer = (state: State, action: Action): State => {
                 ...t,
                 open: false,
               }
-            : t,
+            : t
         ),
       }
     }
